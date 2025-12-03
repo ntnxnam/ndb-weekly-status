@@ -5,11 +5,10 @@ const path = require('path');
 class JiraClient {
   constructor() {
     this.config = this.loadConfig();
+    this.backendConfig = this.loadBackendConfig();
+    this.userConfig = this.loadUserConfig();
     this.baseUrl = this.config.jira.baseUrl;
-    this.auth = {
-      username: this.config.jira.username,
-      password: this.config.jira.apiToken
-    };
+    this.pat = this.config.jira.apiToken;
   }
 
   loadConfig() {
@@ -54,40 +53,105 @@ class JiraClient {
     }
   }
 
-  async searchIssues(jql = null) {
+  loadBackendConfig() {
+    try {
+      const backendConfigPath = path.join(__dirname, 'backend-default-config.json');
+      const backendConfigData = fs.readFileSync(backendConfigPath, 'utf8');
+      return JSON.parse(backendConfigData);
+    } catch (error) {
+      console.log('No backend-default-config.json found, using minimal default');
+      return {
+        defaultColumns: [
+          { key: 'key', label: 'Key', type: 'link', jiraField: 'key', isDefault: true, isEditable: false },
+          { key: 'summary', label: 'Summary', type: 'text', jiraField: 'summary', isDefault: true, isEditable: false }
+        ],
+        allPossibleFields: ['key', 'summary', 'status', 'assignee', 'priority', 'issuetype', 'project']
+      };
+    }
+  }
+
+  loadUserConfig() {
+    try {
+      const userConfigPath = path.join(__dirname, 'user-column-config.json');
+      const userConfigData = fs.readFileSync(userConfigPath, 'utf8');
+      return JSON.parse(userConfigData);
+    } catch (error) {
+      console.log('No user-column-config.json found, using empty user config');
+      return { userColumns: [] };
+    }
+  }
+
+  async fetchAllData(jql = null) {
     try {
       const query = jql || this.config.jira.jql;
+      console.log('Fetching ALL data with all possible fields...');
+      
+      // Ensure allPossibleFields is available
+      const fields = this.backendConfig?.allPossibleFields || [
+        'key', 'summary', 'status', 'assignee', 'priority', 'issuetype', 'project', 'created', 'updated'
+      ];
+      
+      console.log('Using fields:', fields);
       
       const response = await axios.post(
         `${this.baseUrl}/rest/api/3/search`,
         {
           jql: query,
           maxResults: 100,
-          fields: [
-            'summary',
-            'status',
-            'assignee',
-            'priority',
-            'created',
-            'updated',
-            'issuetype',
-            'project'
-          ]
+          fields: fields
         },
         {
-          auth: this.auth,
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.pat.trim().replace(/\r?\n/g, '')}`
           }
         }
       );
 
       return response.data;
     } catch (error) {
-      console.error('Error fetching Jira data:', error.response?.data || error.message);
-      throw new Error(`Failed to fetch Jira data: ${error.response?.data?.errorMessages?.[0] || error.message}`);
+      console.error('Error fetching all Jira data:', error.response?.data || error.message);
+      throw new Error(`Failed to fetch all Jira data: ${error.response?.data?.errorMessages?.[0] || error.message}`);
     }
+  }
+
+  async refreshColumns(jql = null) {
+    try {
+      const query = jql || this.config.jira.jql;
+      console.log('Refreshing with configured columns only...');
+      
+      // Get all columns (default + user configured)
+      const allColumns = this.getAllColumns();
+      const fields = allColumns?.map(col => col.jiraField) || ['key', 'summary', 'status'];
+      console.log('Fetching fields:', fields);
+      
+      const response = await axios.post(
+        `${this.baseUrl}/rest/api/3/search`,
+        {
+          jql: query,
+          maxResults: 100,
+          fields: fields
+        },
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.pat.trim().replace(/\r?\n/g, '')}`
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error refreshing columns:', error.response?.data || error.message);
+      throw new Error(`Failed to refresh columns: ${error.response?.data?.errorMessages?.[0] || error.message}`);
+    }
+  }
+
+  // Legacy method for backward compatibility
+  async searchIssues(jql = null) {
+    return await this.refreshColumns(jql);
   }
 
   async getIssueDetails(issueKey) {
@@ -95,9 +159,9 @@ class JiraClient {
       const response = await axios.get(
         `${this.baseUrl}/rest/api/3/issue/${issueKey}`,
         {
-          auth: this.auth,
           headers: {
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${this.pat.trim().replace(/\r?\n/g, '')}`
           }
         }
       );
@@ -109,19 +173,107 @@ class JiraClient {
     }
   }
 
-  formatIssues(issues) {
-    return issues.map(issue => ({
-      key: issue.key,
-      summary: issue.fields.summary,
-      status: issue.fields.status.name,
-      assignee: issue.fields.assignee?.displayName || 'Unassigned',
-      priority: issue.fields.priority?.name || 'No Priority',
-      issueType: issue.fields.issuetype.name,
-      project: issue.fields.project.name,
-      created: new Date(issue.fields.created).toLocaleDateString(),
-      updated: new Date(issue.fields.updated).toLocaleDateString(),
-      url: `${this.baseUrl}/browse/${issue.key}`
-    }));
+  getAllColumns() {
+    // Combine default columns (always first) with user columns
+    const defaultColumns = this.backendConfig?.defaultColumns || [];
+    const userColumns = this.userConfig?.userColumns || [];
+    return [...defaultColumns, ...userColumns];
+  }
+
+  formatIssues(issues, useAllColumns = false) {
+    if (!Array.isArray(issues)) {
+      console.warn('formatIssues: issues is not an array', issues);
+      return [];
+    }
+    
+    return issues.map(issue => {
+      const formattedIssue = {
+        url: `${this.baseUrl}/browse/${issue.key}`
+      };
+      
+      // Get columns to use
+      const columns = this.getAllColumns();
+      
+      // Format each field based on column configuration
+      if (Array.isArray(columns)) {
+        columns.forEach(column => {
+          if (column && column.jiraField && column.key) {
+            const fieldValue = this.getFieldValue(issue, column.jiraField);
+            formattedIssue[column.key] = this.formatFieldValue(fieldValue, column.type);
+          }
+        });
+      }
+      
+      return formattedIssue;
+    });
+  }
+
+  getFieldValue(issue, jiraField) {
+    // Handle nested field access (e.g., status.name, assignee.displayName)
+    const fieldParts = jiraField.split('.');
+    let value = issue.fields;
+    
+    for (const part of fieldParts) {
+      if (value && typeof value === 'object') {
+        value = value[part];
+      } else {
+        return null;
+      }
+    }
+    
+    return value;
+  }
+
+  formatFieldValue(value, type) {
+    if (value === null || value === undefined) {
+      return type === 'badge' ? 'Unknown' : '';
+    }
+    
+    switch (type) {
+      case 'link':
+        return value;
+      case 'badge':
+        return typeof value === 'object' ? value.name || value.toString() : value.toString();
+      case 'date':
+        return new Date(value).toLocaleDateString();
+      case 'datetime':
+        return new Date(value).toLocaleString();
+      case 'text':
+      default:
+        if (typeof value === 'object') {
+          return value.name || value.toString();
+        }
+        return value.toString();
+    }
+  }
+
+  getTableConfig() {
+    return {
+      defaultColumns: this.backendConfig.defaultColumns,
+      userColumns: this.userConfig.userColumns,
+      allColumns: this.getAllColumns(),
+      allPossibleFields: this.backendConfig.allPossibleFields
+    };
+  }
+
+  saveUserConfig(userColumns) {
+    try {
+      const userConfigPath = path.join(__dirname, 'user-column-config.json');
+      const configData = JSON.stringify({ userColumns }, null, 2);
+      fs.writeFileSync(userConfigPath, configData);
+      
+      // Reload user config
+      this.userConfig = this.loadUserConfig();
+      console.log('User configuration saved successfully');
+      return true;
+    } catch (error) {
+      console.error('Error saving user configuration:', error.message);
+      return false;
+    }
+  }
+
+  getBackendConfig() {
+    return this.backendConfig;
   }
 }
 

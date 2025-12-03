@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Column Configuration - NDB Weekly Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn.primary {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn.primary:hover {
+            background: #333333;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: #f8f8f8;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #ffffff;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            background: #ffffff;
+            display: none;
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-result-item:hover {
+            background: #f8f8f8;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            font-weight: 500;
+        }
+
+        .field-type {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .add-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .add-btn:hover {
+            background: #333;
+        }
+
+        .add-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Selected Fields */
+        .selected-fields {
+            margin-bottom: 20px;
+        }
+
+        .selected-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .selected-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .selected-tile {
+            background: #000;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .remove-selected {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-selected:hover {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        /* Configured Columns */
+        .configured-section {
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .configured-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .add-selected-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .columns-list {
+            min-height: 200px;
+            border: 2px dashed #e5e5e5;
+            border-radius: 4px;
+            padding: 15px;
+            background: #f8f8f8;
+        }
+
+        .columns-list.has-items {
+            border-style: solid;
+            background: #ffffff;
+        }
+
+        .column-item {
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+
+        .column-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .column-item.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .column-item.inactive {
+            opacity: 0.6;
+            background: #f8f8f8;
+        }
+
+        .column-info {
+            flex: 1;
+        }
+
+        .column-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .column-field {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .column-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toggle-active {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #000;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+        }
+
+        .btn-danger:hover {
+            background: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8f8f8;
+            border: 1px solid #e5e5e5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .selected-tiles {
+                flex-direction: column;
+            }
+
+            .column-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .column-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="header-title">Column Configuration</h1>
+        <div class="header-actions">
+            <a href="index.html" class="btn">← Back to Dashboard</a>
+            <button class="btn primary" onclick="saveConfiguration()">Save Configuration</button>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Search Section -->
+        <div class="search-section">
+            <h2 class="search-title">Search JIRA Fields</h2>
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="Type to search JIRA fields...">
+                <span class="search-icon">🔍</span>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+
+        <!-- Selected Fields -->
+        <div class="selected-fields" id="selectedFields" style="display: none;">
+            <h3 class="selected-title">Selected Fields</h3>
+            <div id="selectedTiles" class="selected-tiles"></div>
+        </div>
+
+        <!-- Configured Columns -->
+        <div class="configured-section">
+            <h2 class="configured-title">
+                Configured Columns
+                <button class="btn primary add-selected-btn" id="addSelectedBtn" onclick="addSelectedFields()" style="display: none;">
+                    Add Selected Fields
+                </button>
+            </h2>
+            <div id="columnsList" class="columns-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>No columns configured yet. Search and select fields above to get started.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn primary" onclick="saveConfiguration()">Save Configuration</button>
+            <button class="btn" onclick="resetConfiguration()">Reset to Default</button>
+            <a href="index.html" class="btn">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Loading and Error States -->
+    <div id="loading" class="loading" style="display: none;">
+        Loading...
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        <p id="errorMessage"></p>
+    </div>
+
+    <script>
+        let allJiraFields = [];
+        let selectedFields = [];
+        let configuredColumns = [];
+        let draggedElement = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Column configuration page loaded');
+            await loadTableConfig();
+            await loadJiraFields();
+            loadConfiguredColumns();
+            setupSearch();
+        });
+
+        // Load table configuration
+        async function loadTableConfig() {
+            try {
+                const response = await fetch('http://localhost:8080/api/table-config?t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success) {
+                    configuredColumns = [...data.config.userColumns];
+                    console.log('Table config loaded:', data.config);
+                } else {
+                    throw new Error(data.error || 'Failed to load table configuration');
+                }
+            } catch (err) {
+                console.error('Error loading table config:', err);
+                configuredColumns = [];
+            }
+        }
+
+        // Load JIRA fields
+        async function loadJiraFields() {
+            try {
+                const response = await fetch('http://localhost:8080/api/backend-config?t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success) {
+                    allJiraFields = data.config.allPossibleFields || [];
+                    console.log('JIRA fields loaded:', allJiraFields.length);
+                } else {
+                    throw new Error(data.error || 'Failed to load JIRA fields');
+                }
+            } catch (err) {
+                console.error('Error loading JIRA fields:', err);
+                allJiraFields = [];
+            }
+        }
+
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    searchResults.classList.remove('show');
+                    return;
+                }
+
+                const filtered = allJiraFields.filter(field => 
+                    field.toLowerCase().includes(query)
+                ).slice(0, 20); // Limit to 20 results
+
+                displaySearchResults(filtered);
+            });
+
+            // Hide results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.remove('show');
+                }
+            });
+        }
+
+        // Display search results
+        function displaySearchResults(fields) {
+            const searchResults = document.getElementById('searchResults');
+            searchResults.innerHTML = '';
+
+            if (fields.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">No fields found</div>';
+            } else {
+                fields.forEach(field => {
+                    const isSelected = selectedFields.some(f => f.field === field);
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="field-name">${field}</div>
+                            <div class="field-type">${getFieldType(field)}</div>
+                        </div>
+                        <button class="add-btn" ${isSelected ? 'disabled' : ''} onclick="addField('${field}')">
+                            ${isSelected ? 'Added' : 'Add'}
+                        </button>
+                    `;
+                    searchResults.appendChild(item);
+                });
+            }
+
+            searchResults.classList.add('show');
+        }
+
+        // Get field type based on field name
+        function getFieldType(field) {
+            if (field.includes('customfield_')) return 'Custom Field';
+            if (['key', 'summary', 'status', 'assignee', 'priority', 'issuetype', 'project'].includes(field)) return 'Standard Field';
+            if (field.includes('date') || field.includes('created') || field.includes('updated')) return 'Date Field';
+            return 'JIRA Field';
+        }
+
+        // Add field to selected
+        function addField(field) {
+            if (selectedFields.some(f => f.field === field)) {
+                return; // Already selected
+            }
+
+            const fieldType = getFieldType(field);
+            const displayName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            selectedFields.push({
+                field: field,
+                displayName: displayName,
+                type: fieldType === 'Date Field' ? 'date' : 'text'
+            });
+
+            updateSelectedFields();
+            updateSearchResults();
+        }
+
+        // Remove field from selected
+        function removeSelectedField(field) {
+            selectedFields = selectedFields.filter(f => f.field !== field);
+            updateSelectedFields();
+            updateSearchResults();
+        }
+
+        // Update selected fields display
+        function updateSelectedFields() {
+            const selectedFieldsDiv = document.getElementById('selectedFields');
+            const selectedTiles = document.getElementById('selectedTiles');
+            const addSelectedBtn = document.getElementById('addSelectedBtn');
+
+            if (selectedFields.length === 0) {
+                selectedFieldsDiv.style.display = 'none';
+                addSelectedBtn.style.display = 'none';
+                return;
+            }
+
+            selectedFieldsDiv.style.display = 'block';
+            addSelectedBtn.style.display = 'inline-block';
+
+            selectedTiles.innerHTML = '';
+            selectedFields.forEach(field => {
+                const tile = document.createElement('div');
+                tile.className = 'selected-tile';
+                tile.innerHTML = `
+                    <span>${field.displayName}</span>
+                    <button class="remove-selected" onclick="removeSelectedField('${field.field}')">×</button>
+                `;
+                selectedTiles.appendChild(tile);
+            });
+        }
+
+        // Update search results to show added status
+        function updateSearchResults() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value.length >= 2) {
+                const query = searchInput.value.toLowerCase().trim();
+                const filtered = allJiraFields.filter(field => 
+                    field.toLowerCase().includes(query)
+                ).slice(0, 20);
+                displaySearchResults(filtered);
+            }
+        }
+
+        // Add selected fields to configured columns
+        function addSelectedFields() {
+            selectedFields.forEach(field => {
+                const newColumn = {
+                    key: field.field.replace(/[^a-zA-Z0-9_]/g, '_'),
+                    label: field.displayName,
+                    type: field.type,
+                    jiraField: field.field,
+                    active: true
+                };
+                configuredColumns.push(newColumn);
+            });
+
+            selectedFields = [];
+            updateSelectedFields();
+            loadConfiguredColumns();
+        }
+
+        // Load configured columns
+        function loadConfiguredColumns() {
+            const columnsList = document.getElementById('columnsList');
+            
+            if (configuredColumns.length === 0) {
+                columnsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No columns configured yet. Search and select fields above to get started.</p>
+                    </div>
+                `;
+                columnsList.classList.remove('has-items');
+                return;
+            }
+
+            columnsList.classList.add('has-items');
+            columnsList.innerHTML = '';
+
+            configuredColumns.forEach((column, index) => {
+                const columnDiv = createColumnItem(column, index);
+                columnsList.appendChild(columnDiv);
+            });
+
+            setupDragAndDrop();
+        }
+
+        // Create column item
+        function createColumnItem(column, index) {
+            const div = document.createElement('div');
+            div.className = `column-item ${column.active ? '' : 'inactive'}`;
+            div.draggable = true;
+            div.dataset.index = index;
+            
+            div.innerHTML = `
+                <div class="column-info">
+                    <div class="column-name">${column.label}</div>
+                    <div class="column-field">${column.jiraField} (${column.type})</div>
+                </div>
+                <div class="column-actions">
+                    <div class="toggle-active">
+                        <span>Active</span>
+                        <div class="toggle-switch ${column.active ? 'active' : ''}" onclick="toggleActive(${index})">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="removeColumn(${index})">Remove</button>
+                </div>
+            `;
+
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragend', handleDragEnd);
+            div.addEventListener('dragover', handleDragOver);
+            div.addEventListener('drop', handleDrop);
+
+            return div;
+        }
+
+        // Toggle column active status
+        function toggleActive(index) {
+            configuredColumns[index].active = !configuredColumns[index].active;
+            loadConfiguredColumns();
+        }
+
+        // Remove column
+        function removeColumn(index) {
+            if (confirm('Are you sure you want to remove this column?')) {
+                configuredColumns.splice(index, 1);
+                loadConfiguredColumns();
+            }
+        }
+
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            const items = document.querySelectorAll('.column-item');
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (draggedElement && draggedElement !== this) {
+                const draggedIndex = parseInt(draggedElement.dataset.index);
+                const targetIndex = parseInt(this.dataset.index);
+                
+                const draggedItem = configuredColumns.splice(draggedIndex, 1)[0];
+                configuredColumns.splice(targetIndex, 0, draggedItem);
+                
+                loadConfiguredColumns();
+            }
+        }
+
+        // Save configuration
+        async function saveConfiguration() {
+            try {
+                const response = await fetch('http://localhost:8080/api/save-column-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userColumns: configuredColumns })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Configuration saved successfully!');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Failed to save configuration: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Error saving configuration:', err);
+                alert('Error saving configuration: ' + err.message);
+            }
+        }
+
+        // Reset configuration
+        function resetConfiguration() {
+            if (confirm('Are you sure you want to reset to default configuration? This will remove all your custom columns.')) {
+                configuredColumns = [];
+                loadConfiguredColumns();
+            }
+        }
+    </script>
+</body>
+</html>

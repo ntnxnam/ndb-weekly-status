@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NDB Weekly Status - Jira Dashboard</title>
+    <title>NDB Weekly Status</title>
     <style>
         * {
             margin: 0;
@@ -12,329 +12,614 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
         }
 
-        .container {
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #000000;
+            color: #ffffff;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: #ffffff;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: #333;
+            border-left-color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: #333;
+            border-left-color: #ffffff;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .main-content.sidebar-open {
+            margin-left: 250px;
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hamburger {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hamburger span {
+            width: 20px;
+            height: 2px;
+            background: #000000;
+            transition: 0.3s;
+        }
+
+        .hamburger.open span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger.open span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.open span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
+        /* Controls */
         .controls {
-            padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
             display: flex;
             gap: 15px;
-            align-items: center;
+            margin-bottom: 30px;
             flex-wrap: wrap;
         }
 
-        .custom-jql {
+        .jql-input {
             flex: 1;
             min-width: 300px;
-        }
-
-        .custom-jql input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            background: #ffffff;
         }
 
-        .custom-jql input:focus {
+        .jql-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #000000;
+        }
+
+        /* Filters */
+        .filters-section {
+            background: #f8f8f8;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .filters-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #000;
+        }
+
+        .filters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+            min-height: 40px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
         }
 
         .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding: 10px 20px;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
             text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
             display: inline-block;
         }
 
-        .btn-primary {
-            background: #667eea;
-            color: white;
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
         }
 
-        .btn-primary:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
+        .btn.primary {
+            background: #000000;
+            color: #ffffff;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        .btn.primary:hover {
+            background: #333333;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
+        /* Stats */
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
+            margin-bottom: 30px;
         }
 
         .stat-card {
-            background: white;
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
             padding: 20px;
-            border-radius: 8px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
             margin-bottom: 5px;
         }
 
         .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            color: #666;
         }
 
-        .issues-container {
-            padding: 30px;
+        /* Table */
+        .table-container {
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
-        }
-
-        .issues-table {
+        .table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
 
-        .issues-table th,
-        .issues-table td {
-            padding: 12px 16px;
+        .table th {
+            background: #f8f8f8;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #e5e5e5;
         }
 
-        .issues-table th {
-            background: #f8f9fa;
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table tr:hover {
+            background: #f8f8f8;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
             font-weight: 600;
-            color: #495057;
-            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .issues-table tr:hover {
-            background: #f8f9fa;
-        }
+        .status-todo { background: #f0f0f0; color: #666; }
+        .status-in-progress { background: #e5e5e5; color: #000; }
+        .status-done { background: #000; color: #fff; }
 
-        .issue-key {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .issue-key a {
-            color: inherit;
+        /* Links */
+        .link {
+            color: #000000;
             text-decoration: none;
+            font-weight: 500;
         }
 
-        .issue-key a:hover {
+        .link:hover {
             text-decoration: underline;
         }
 
-        .status-badge {
-            padding: 4px 8px;
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8f8f8;
+            border: 1px solid #e5e5e5;
+            padding: 15px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
+            margin: 20px 0;
+            color: #000;
         }
 
-        .status-todo { background: #e9ecef; color: #495057; }
-        .status-in-progress { background: #cce5ff; color: #004085; }
-        .status-done { background: #d4edda; color: #155724; }
 
-        .priority-high { color: #dc3545; font-weight: 600; }
-        .priority-medium { color: #ffc107; font-weight: 600; }
-        .priority-low { color: #28a745; font-weight: 600; }
-
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #667eea;
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s;
-        }
-
-        .refresh-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+            }
+
+            .main-content.sidebar-open {
+                margin-left: 0;
+            }
+
             .controls {
                 flex-direction: column;
-                align-items: stretch;
             }
-            
-            .custom-jql {
+
+            .jql-input {
                 min-width: auto;
             }
-            
-            .issues-table {
-                font-size: 0.9rem;
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
             }
-            
-            .issues-table th,
-            .issues-table td {
-                padding: 8px 12px;
+
+            .table {
+                font-size: 12px;
             }
+
+            .table th,
+            .table td {
+                padding: 10px;
+            }
+        }
+
+        /* Overlay for mobile */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>NDB Weekly Status</h1>
-            <p>Jira Issues Dashboard</p>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">NDB Status</div>
+            <div class="sidebar-subtitle">Weekly Dashboard</div>
         </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" onclick="showDashboard()">Dashboard</a>
+            <a href="config.html" class="nav-item">Configure Columns</a>
+            <a href="#" class="nav-item" onclick="fetchAllData()">Fetch All Data</a>
+            <a href="#" class="nav-item" onclick="refreshColumns()">Refresh Columns</a>
+        </nav>
+    </div>
 
-        <div class="controls">
-            <div class="custom-jql">
-                <input type="text" id="customJql" placeholder="Enter custom JQL query (optional)">
-            </div>
-            <button class="btn btn-primary" onclick="loadIssues()">Load Issues</button>
-            <button class="btn btn-secondary" onclick="loadIssues()">Refresh</button>
-        </div>
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-        <div id="stats" class="stats" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-number" id="totalIssues">0</div>
-                <div class="stat-label">Total Issues</div>
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="header-title">NDB Weekly Status</h1>
+            <div class="header-actions">
+                <button class="btn" onclick="refreshColumns()">Refresh</button>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="inProgressIssues">0</div>
-                <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="doneIssues">0</div>
-                <div class="stat-label">Done</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="todoIssues">0</div>
-                <div class="stat-label">To Do</div>
-            </div>
-        </div>
+        </header>
 
-        <div class="issues-container">
+        <!-- Content -->
+        <div class="content">
+            <!-- Controls -->
+            <div class="controls">
+                <input type="text" id="customJql" class="jql-input" placeholder="Enter custom JQL query (optional)" value="filter = 165194">
+                <button class="btn primary" onclick="fetchAllData()">Fetch All Data</button>
+                <button class="btn" onclick="refreshColumns()">Refresh Columns</button>
+                <a href="config.html" class="btn">Configure Columns</a>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <h3 class="filters-title">Filters</h3>
+                <div id="filtersContainer" class="filters-container"></div>
+                <div class="filter-actions">
+                    <button class="btn" onclick="applyFilters()">Apply Filters</button>
+                    <button class="btn" onclick="clearFilters()">Clear All</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalIssues">0</div>
+                    <div class="stat-label">Total Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="inProgressIssues">0</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="doneIssues">0</div>
+                    <div class="stat-label">Done</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todoIssues">0</div>
+                    <div class="stat-label">To Do</div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
             <div id="loading" class="loading" style="display: none;">
-                <p>Loading issues...</p>
+                Loading issues...
             </div>
 
+            <!-- Error State -->
             <div id="error" class="error" style="display: none;">
                 <p id="errorMessage"></p>
             </div>
 
-            <div id="issuesContent">
-                <table class="issues-table" id="issuesTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Key</th>
-                            <th>Summary</th>
-                            <th>Status</th>
-                            <th>Assignee</th>
-                            <th>Priority</th>
-                            <th>Type</th>
-                            <th>Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody id="issuesTableBody">
-                    </tbody>
+            <!-- Issues Table -->
+            <div class="table-container">
+                <table class="table" id="issuesTable" style="display: none;">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="issuesTableBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <button class="refresh-btn" onclick="loadIssues()" title="Refresh">↻</button>
 
     <script>
         let currentIssues = [];
+        let tableConfig = null;
+        let userColumns = [];
+        let draggedElement = null;
 
-        async function loadIssues() {
+        // Sidebar functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const hamburger = document.getElementById('hamburger');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('open');
+            mainContent.classList.toggle('sidebar-open');
+            hamburger.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function showDashboard() {
+            toggleSidebar();
+        }
+
+
+        // API functions
+        async function loadTableConfig() {
+            try {
+                console.log('Loading table config from http://localhost:3001/api/table-config');
+                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now());
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Table config response:', data);
+                
+                if (data.success) {
+                    tableConfig = data.config;
+                    userColumns = [...data.config.userColumns];
+                    console.log('Table config loaded successfully:', tableConfig);
+                } else {
+                    throw new Error(data.error || 'Failed to load table configuration');
+                }
+            } catch (err) {
+                console.error('Error loading table config:', err);
+                tableConfig = {
+                    defaultColumns: [
+                        { key: 'key', label: 'Key', type: 'link', jiraField: 'key', isDefault: true, isEditable: false },
+                        { key: 'summary', label: 'Summary', type: 'text', jiraField: 'summary', isDefault: true, isEditable: false }
+                    ],
+                    userColumns: [],
+                    allColumns: []
+                };
+                userColumns = [];
+            }
+        }
+
+        function createTableHeader() {
+            const tableHeader = document.getElementById('tableHeader');
+            tableHeader.innerHTML = '';
+            
+            if (!tableConfig || !tableConfig.defaultColumns) {
+                console.warn('No table configuration available for headers');
+                return;
+            }
+            
+            const row = document.createElement('tr');
+            tableConfig.defaultColumns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column.label;
+                th.className = 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50';
+                row.appendChild(th);
+            });
+            tableHeader.appendChild(row);
+        }
+
+        function createFilters() {
+            const filtersContainer = document.getElementById('filtersContainer');
+            if (!filtersContainer) return;
+
+            filtersContainer.innerHTML = '';
+
+            if (!tableConfig || !tableConfig.defaultColumns) {
+                console.warn('No table configuration available for filters');
+                return;
+            }
+
+            // Create filter for each column
+            tableConfig.defaultColumns.forEach(column => {
+                if (column && column.key && column.key !== 'url') {
+                    const filterDiv = document.createElement('div');
+                    filterDiv.className = 'filter-group';
+                    filterDiv.innerHTML = `
+                        <label class="filter-label">${column.label || column.key}</label>
+                        <select class="filter-select" id="filter-${column.key}" multiple>
+                            <option value="">All ${column.label || column.key}</option>
+                        </select>
+                    `;
+                    filtersContainer.appendChild(filterDiv);
+                }
+            });
+        }
+
+        async function fetchAllData() {
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
             const issuesTable = document.getElementById('issuesTable');
             const stats = document.getElementById('stats');
             const customJql = document.getElementById('customJql').value;
 
-            // Show loading state
             loading.style.display = 'block';
             error.style.display = 'none';
             issuesTable.style.display = 'none';
             stats.style.display = 'none';
 
             try {
-                const url = customJql ? `/api/issues?jql=${encodeURIComponent(customJql)}` : '/api/issues';
+                const url = customJql ? `http://localhost:3001/api/fetch-all-data?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:3001/api/fetch-all-data?t=${Date.now()}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -342,11 +627,54 @@
                     currentIssues = data.issues;
                     displayIssues(data.issues);
                     updateStats(data.issues);
+                    console.log('All data fetched successfully:', data.message);
                 } else {
-                    throw new Error(data.error || 'Failed to load issues');
+                    throw new Error(data.error || 'Failed to fetch all data');
                 }
             } catch (err) {
-                console.error('Error loading issues:', err);
+                console.error('Error fetching all data:', err);
+                error.style.display = 'block';
+                document.getElementById('errorMessage').textContent = err.message;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function refreshColumns() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const issuesTable = document.getElementById('issuesTable');
+            const stats = document.getElementById('stats');
+            const customJql = document.getElementById('customJql').value;
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            issuesTable.style.display = 'none';
+            stats.style.display = 'none';
+
+            try {
+                const url = customJql ? `http://localhost:3001/api/refresh-columns?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:3001/api/refresh-columns?t=${Date.now()}`;
+                console.log('Refreshing columns from:', url);
+                const response = await fetch(url);
+                console.log('Refresh response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Refresh response data:', data);
+
+                if (data.success) {
+                    currentIssues = data.issues;
+                    displayIssues(data.issues);
+                    updateStats(data.issues);
+                    console.log('Columns refreshed successfully:', data.message);
+                } else {
+                    throw new Error(data.error || 'Failed to refresh columns');
+                }
+            } catch (err) {
+                console.error('Error refreshing columns:', err);
                 error.style.display = 'block';
                 document.getElementById('errorMessage').textContent = err.message;
             } finally {
@@ -360,41 +688,155 @@
             
             tableBody.innerHTML = '';
 
+            if (!Array.isArray(issues)) {
+                console.warn('displayIssues: issues is not an array', issues);
+                issues = [];
+            }
+
             if (issues.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #6c757d;">No issues found</td></tr>';
+                const row = document.createElement('tr');
+                const td = document.createElement('td');
+                const columnCount = tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns.length : 7;
+                td.colSpan = columnCount;
+                td.style.textAlign = 'center';
+                td.style.color = '#666';
+                td.textContent = 'No issues found';
+                row.appendChild(td);
+                tableBody.appendChild(row);
             } else {
                 issues.forEach(issue => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="issue-key">
-                            <a href="${issue.url}" target="_blank">${issue.key}</a>
-                        </td>
-                        <td>${issue.summary}</td>
-                        <td>
-                            <span class="status-badge status-${issue.status.toLowerCase().replace(/\s+/g, '-')}">
-                                ${issue.status}
-                            </span>
-                        </td>
-                        <td>${issue.assignee}</td>
-                        <td class="priority-${issue.priority.toLowerCase().replace(/\s+/g, '-')}">
-                            ${issue.priority}
-                        </td>
-                        <td>${issue.issueType}</td>
-                        <td>${issue.updated}</td>
-                    `;
+                    
+                    const columns = tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : [];
+                    columns.forEach(column => {
+                        const td = document.createElement('td');
+                        const value = issue[column.key] || '';
+                        
+                        switch (column.type) {
+                            case 'link':
+                                if (column.key === 'key') {
+                                    const link = document.createElement('a');
+                                    link.href = issue.url;
+                                    link.target = '_blank';
+                                    link.textContent = value;
+                                    link.className = 'link';
+                                    td.appendChild(link);
+                                } else {
+                                    td.textContent = value;
+                                }
+                                break;
+                            case 'badge':
+                                const badge = document.createElement('span');
+                                badge.className = `status-badge status-${value.toLowerCase().replace(/\s+/g, '-')}`;
+                                badge.textContent = value;
+                                td.appendChild(badge);
+                                break;
+                            case 'date':
+                            case 'datetime':
+                                td.textContent = value;
+                                break;
+                            case 'text':
+                            default:
+                                td.textContent = value;
+                                break;
+                        }
+                        
+                        row.appendChild(td);
+                    });
+                    
                     tableBody.appendChild(row);
                 });
             }
 
             issuesTable.style.display = 'table';
+            
+            // Populate filter options after displaying issues
+            populateFilterOptions(issues);
+        }
+
+        function populateFilterOptions(issues) {
+            if (!tableConfig || !tableConfig.defaultColumns) return;
+
+            tableConfig.defaultColumns.forEach(column => {
+                if (column.key === 'url') return;
+                
+                const filterSelect = document.getElementById(`filter-${column.key}`);
+                if (!filterSelect) return;
+
+                // Clear existing options except "All"
+                filterSelect.innerHTML = '<option value="">All ' + (column.label || column.key) + '</option>';
+
+                // Get unique values for this column
+                const uniqueValues = [...new Set(issues.map(issue => issue[column.key] || '').filter(value => value !== ''))];
+                
+                uniqueValues.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    filterSelect.appendChild(option);
+                });
+            });
+        }
+
+        function applyFilters() {
+            if (!tableConfig || !tableConfig.defaultColumns) return;
+
+            const allRows = document.querySelectorAll('#issuesTableBody tr');
+            
+            allRows.forEach(row => {
+                let shouldShow = true;
+                
+                tableConfig.defaultColumns.forEach(column => {
+                    if (column.key === 'url') return;
+                    
+                    const filterSelect = document.getElementById(`filter-${column.key}`);
+                    if (!filterSelect) return;
+                    
+                    const selectedValues = Array.from(filterSelect.selectedOptions).map(option => option.value);
+                    
+                    if (selectedValues.length > 0 && !selectedValues.includes('')) {
+                        const cellValue = row.cells[tableConfig.defaultColumns.indexOf(column)]?.textContent || '';
+                        if (!selectedValues.includes(cellValue)) {
+                            shouldShow = false;
+                        }
+                    }
+                });
+                
+                row.style.display = shouldShow ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            if (!tableConfig || !tableConfig.defaultColumns) return;
+
+            tableConfig.defaultColumns.forEach(column => {
+                if (column.key === 'url') return;
+                
+                const filterSelect = document.getElementById(`filter-${column.key}`);
+                if (filterSelect) {
+                    filterSelect.selectedIndex = 0;
+                }
+            });
+            
+            // Show all rows
+            const allRows = document.querySelectorAll('#issuesTableBody tr');
+            allRows.forEach(row => {
+                row.style.display = '';
+            });
         }
 
         function updateStats(issues) {
             const stats = document.getElementById('stats');
+            
+            if (!Array.isArray(issues)) {
+                console.warn('updateStats: issues is not an array', issues);
+                issues = [];
+            }
+            
             const totalIssues = issues.length;
-            const inProgressIssues = issues.filter(issue => issue.status.toLowerCase().includes('progress')).length;
-            const doneIssues = issues.filter(issue => issue.status.toLowerCase().includes('done')).length;
-            const todoIssues = issues.filter(issue => issue.status.toLowerCase().includes('todo')).length;
+            const inProgressIssues = issues.filter(issue => issue.status && issue.status.toLowerCase().includes('progress')).length;
+            const doneIssues = issues.filter(issue => issue.status && issue.status.toLowerCase().includes('done')).length;
+            const todoIssues = issues.filter(issue => issue.status && issue.status.toLowerCase().includes('todo')).length;
 
             document.getElementById('totalIssues').textContent = totalIssues;
             document.getElementById('inProgressIssues').textContent = inProgressIssues;
@@ -404,11 +846,28 @@
             stats.style.display = 'grid';
         }
 
-        // Load issues on page load
-        document.addEventListener('DOMContentLoaded', loadIssues);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM loaded, initializing application...');
+            
+            // Add a small delay to ensure server is ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            console.log('Loading table configuration...');
+            await loadTableConfig();
+            
+            console.log('Creating table header...');
+            createTableHeader();
+            
+            console.log('Refreshing columns...');
+            await refreshColumns();
+            
+            console.log('Application initialized successfully');
+        });
 
         // Auto-refresh every 5 minutes
-        setInterval(loadIssues, 5 * 60 * 1000);
+        setInterval(refreshColumns, 5 * 60 * 1000);
     </script>
 </body>
 </html>

@@ -1,0 +1,131 @@
+{
+  "defaultColumns": [
+    {
+      "key": "key",
+      "label": "Key",
+      "type": "link",
+      "jiraField": "key",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "summary",
+      "label": "Summary",
+      "type": "text",
+      "jiraField": "summary",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "badge",
+      "jiraField": "status.name",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "assignee",
+      "label": "Assignee",
+      "type": "text",
+      "jiraField": "assignee.displayName",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "priority",
+      "label": "Priority",
+      "type": "badge",
+      "jiraField": "priority.name",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "issuetype",
+      "label": "Type",
+      "type": "badge",
+      "jiraField": "issuetype.name",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "created",
+      "label": "Created",
+      "type": "date",
+      "jiraField": "created",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "updated",
+      "label": "Updated",
+      "type": "date",
+      "jiraField": "updated",
+      "isDefault": true,
+      "isEditable": false
+    },
+    {
+      "key": "customfield_35863",
+      "label": "PRFAQ / One-Pager",
+      "type": "text",
+      "jiraField": "customfield_35863",
+      "isDefault": true,
+      "isEditable": false
+    }
+  ],
+  "allPossibleFields": [
+    "key",
+    "summary",
+    "status",
+    "assignee",
+    "priority",
+    "issuetype",
+    "project",
+    "created",
+    "updated",
+    "resolution",
+    "labels",
+    "components",
+    "fixVersions",
+    "customfield_10020",
+    "customfield_10021",
+    "customfield_10022",
+    "customfield_10023",
+    "customfield_10024",
+    "customfield_10025",
+    "customfield_10026",
+    "customfield_10027",
+    "customfield_10028",
+    "customfield_10029",
+    "customfield_10030",
+    "customfield_10031",
+    "customfield_10032",
+    "customfield_10033",
+    "customfield_10034",
+    "customfield_10035",
+    "customfield_10036",
+    "customfield_10037",
+    "customfield_10038",
+    "customfield_10039",
+    "customfield_10040",
+    "customfield_10041",
+    "customfield_10042",
+    "customfield_10043",
+    "customfield_10044",
+    "customfield_10045",
+    "customfield_10046",
+    "customfield_10047",
+    "customfield_10048",
+    "customfield_10049",
+    "customfield_10050",
+    "customfield_35863"
+  ],
+  "jira": {
+    "baseUrl": "https://jira.nutanix.com/",
+    "apiToken": "loaded-from-jira-key-private.txt",
+    "jql": "filter = 'NDB-StatusUpdates'"
+  },
+  "server": {
+    "port": 6000
+  }
+}

@@ -1,11 +1,10 @@
 {
   "jira": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "username": "your-email@example.com",
-    "apiToken": "your-api-token-here",
+    "baseUrl": "https://jira.nutanix.com/",
+    "apiToken": "loaded-from-jira-key-private.txt",
     "jql": "filter = 'NDB-StatusUpdates'"
   },
   "server": {
-    "port": 3000
+    "port": 6000
   }
 }
