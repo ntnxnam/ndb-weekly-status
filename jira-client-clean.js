@@ -45,6 +45,18 @@ class JiraClient {
         const backendConfig = this.configManager.getBackendConfig();
         fields = backendConfig.allPossibleFields || ['key', 'summary', 'status'];
       }
+      
+      // Normalize fields - ensure we request base fields (e.g., 'status' not 'status.name')
+      // Jira API needs base field names, not nested paths
+      fields = fields.map(field => {
+        // Extract base field name (e.g., 'status.name' -> 'status', 'assignee.displayName' -> 'assignee')
+        const baseField = field.split('.')[0];
+        return baseField;
+      });
+      
+      // Remove duplicates
+      fields = [...new Set(fields)];
+      
       console.log(`📊 [fetchAllData] Using ${fields.length} fields for comprehensive data fetch`);
       
       const response = await this.makeJiraRequest(query, fields, tokenToUse);
@@ -97,6 +109,15 @@ class JiraClient {
       }
       
       let fields = backendConfig.defaultColumns?.map(col => col.jiraField) || ['key', 'summary', 'status'];
+      
+      // Normalize fields - ensure we request base fields (e.g., 'status' not 'status.name')
+      fields = fields.map(field => {
+        const baseField = field.split('.')[0];
+        return baseField;
+      });
+      
+      // Remove duplicates
+      fields = [...new Set(fields)];
       console.log(`📊 [refreshColumns] Using ${fields.length} backend configured fields:`, fields);
       
       if (!fields || fields.length === 0) {
@@ -489,9 +510,28 @@ class JiraClient {
         if (column && column.jiraField && column.key) {
           const fieldValue = this.getFieldValue(issue, column.jiraField);
           
+          // Special handling for customfield_23073 - store raw value for summarization
+          if (column.jiraField === 'customfield_23073' || column.key === 'customfield_23073') {
+            // Store the raw value - will be summarized on the frontend
+            formattedIssue[column.key] = fieldValue;
+            formattedIssue[column.key + '_raw'] = fieldValue; // Keep raw for reference
+          }
           // Special handling for labelCheck type
-          if (column.type === 'labelCheck' && column.labelToCheck) {
-            formattedIssue[column.key] = this.checkLabel(fieldValue, column.labelToCheck);
+          else if (column.type === 'labelCheck') {
+            // If labelToCheck is dynamic (based on fixVersions), extract it
+            let labelToCheck = column.labelToCheck;
+            if (column.labelPattern && column.labelPattern === 'fixVersion') {
+              // Get fixVersions and construct label dynamically
+              const fixVersions = this.getFieldValue(issue, 'fixVersions');
+              labelToCheck = this.extractLabelFromFixVersions(fixVersions);
+            }
+            
+            if (labelToCheck) {
+              const labels = this.getFieldValue(issue, 'labels');
+              formattedIssue[column.key] = this.checkLabel(labels, labelToCheck);
+            } else {
+              formattedIssue[column.key] = 'No';
+            }
           } else {
             formattedIssue[column.key] = this.formatFieldValue(fieldValue, column.type);
           }
@@ -523,11 +563,106 @@ class JiraClient {
       if (value && typeof value === 'object') {
         value = value[part];
       } else {
+        // If we can't find the nested field, try to get the parent field
+        // For example, if status.name doesn't exist, try just status
+        if (fieldParts.length > 1 && part === fieldParts[fieldParts.length - 1]) {
+          const parentField = fieldParts[0];
+          const parentValue = issue.fields[parentField];
+          if (parentValue && typeof parentValue === 'object') {
+            // Try common property names
+            return parentValue.name || parentValue.displayName || parentValue.value || null;
+          }
+        }
         return null;
       }
     }
     
+    // Special handling for URL custom fields (CG/PG Confluence links)
+    // Jira URL fields can be stored in different formats:
+    // 1. Object with 'url' property: { url: "https://..." }
+    // 2. Object with 'value' property: { value: "https://..." }
+    // 3. Plain string URL: "https://..."
+    // 4. Rich text with HTML links: "<a href='https://...'>Link</a>"
+    if (value && typeof value === 'object') {
+      // Check if it's a URL field object
+      if (value.url) {
+        return value.url;
+      }
+      if (value.value && typeof value.value === 'string' && value.value.startsWith('http')) {
+        return value.value;
+      }
+      // Check for rich text content that might contain URLs
+      if (value.content) {
+        // Try to extract URL from content array (Atlassian Document Format)
+        const url = this.extractUrlFromContent(value.content);
+        if (url) return url;
+      }
+      // Check if the object itself has a string representation that's a URL
+      if (value.toString && typeof value.toString === 'function') {
+        const strValue = value.toString();
+        if (strValue.startsWith('http')) {
+          return strValue;
+        }
+      }
+    }
+    
+    // If value is a string, check if it contains a URL (for rich text fields)
+    if (typeof value === 'string') {
+      // Check if it's already a URL
+      if (value.startsWith('http')) {
+        return value;
+      }
+      // Try to extract URL from HTML/rich text
+      const urlMatch = value.match(/https?:\/\/[^\s<>"']+/i);
+      if (urlMatch) {
+        return urlMatch[0];
+      }
+    }
+    
     return value;
+  }
+
+  // Extract URL from Atlassian Document Format (ADF) content
+  extractUrlFromContent(content) {
+    if (!content || !Array.isArray(content)) {
+      return null;
+    }
+    
+    for (const item of content) {
+      if (item.type === 'paragraph' || item.type === 'text') {
+        if (item.content && Array.isArray(item.content)) {
+          for (const subItem of item.content) {
+            if (subItem.type === 'text' && subItem.marks) {
+              for (const mark of subItem.marks) {
+                if (mark.type === 'link' && mark.attrs && mark.attrs.href) {
+                  return mark.attrs.href;
+                }
+              }
+            }
+            if (subItem.type === 'inlineCard' && subItem.attrs && subItem.attrs.url) {
+              return subItem.attrs.url;
+            }
+          }
+        }
+        if (item.text && item.marks) {
+          for (const mark of item.marks) {
+            if (mark.type === 'link' && mark.attrs && mark.attrs.href) {
+              return mark.attrs.href;
+            }
+          }
+        }
+      }
+      if (item.type === 'inlineCard' && item.attrs && item.attrs.url) {
+        return item.attrs.url;
+      }
+      // Recursively search nested content
+      if (item.content) {
+        const nestedUrl = this.extractUrlFromContent(item.content);
+        if (nestedUrl) return nestedUrl;
+      }
+    }
+    
+    return null;
   }
 
   formatFieldValue(value, type) {
@@ -540,13 +675,34 @@ class JiraClient {
         return value;
       case 'confluence':
         // Handle different URL formats from Jira
-        if (typeof value === 'string' && value.startsWith('http')) {
-          return value;
+        if (typeof value === 'string') {
+          // If it's already a URL string, return it
+          if (value.startsWith('http')) {
+            return value;
+          }
+          // Try to extract URL from HTML/rich text
+          const urlMatch = value.match(/https?:\/\/[^\s<>"']+/i);
+          if (urlMatch) {
+            return urlMatch[0];
+          }
         }
         if (typeof value === 'object') {
-          return value.url || value.value || value.href || value.toString();
+          // Check common URL field properties
+          if (value.url) return value.url;
+          if (value.value && typeof value.value === 'string' && value.value.startsWith('http')) {
+            return value.value;
+          }
+          if (value.href) return value.href;
+          // Try to extract from ADF content
+          if (value.content) {
+            const extractedUrl = this.extractUrlFromContent(value.content);
+            if (extractedUrl) return extractedUrl;
+          }
         }
-        return value.toString();
+        // Fallback: try to convert to string and extract URL
+        const strValue = value ? value.toString() : '';
+        const fallbackMatch = strValue.match(/https?:\/\/[^\s<>"']+/i);
+        return fallbackMatch ? fallbackMatch[0] : strValue;
       case 'badge':
         return typeof value === 'object' ? (value.name || value.displayName || value.toString()) : value.toString();
       case 'date':
@@ -571,9 +727,30 @@ class JiraClient {
     }
   }
 
+  // Extract label pattern from fixVersions (e.g., "NDB-2.11" -> "ndb-2.11-wishlist")
+  extractLabelFromFixVersions(fixVersions) {
+    if (!fixVersions) return null;
+    
+    // Handle array of fix version objects
+    const versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions];
+    
+    for (const version of versions) {
+      const versionName = typeof version === 'string' ? version : (version.name || version.toString());
+      
+      // Match patterns like "NDB-2.11", "2.11", "NDB-2.10", etc.
+      const match = versionName.match(/(?:NDB-)?(\d+\.\d+)/i);
+      if (match) {
+        const versionNum = match[1]; // e.g., "2.11"
+        return `ndb-${versionNum}-wishlist`;
+      }
+    }
+    
+    return null;
+  }
+
   // Check if a specific label exists in the labels array
   checkLabel(labels, labelToCheck) {
-    if (!labels) return 'No';
+    if (!labels || !labelToCheck) return 'No';
     if (Array.isArray(labels)) {
       return labels.some(label => {
         const labelStr = typeof label === 'string' ? label : (label.name || label.toString());

@@ -137,28 +137,29 @@
             align-items: center;
         }
 
-        /* Content */
+        /* Content - Minimal, Tight */
         .content {
-            padding: 30px;
-            max-width: 1200px;
+            padding: 16px 20px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
-        /* Controls */
+        /* Controls - Compact */
         .controls {
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .jql-input {
             flex: 1;
-            min-width: 300px;
-            padding: 10px 15px;
-            border: 1px solid #e5e5e5;
+            min-width: 250px;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             background: #ffffff;
         }
 
@@ -220,21 +221,23 @@
 
         .filter-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
+            margin-top: 8px;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: 1px solid #000000;
             background: #ffffff;
             color: #000000;
             text-decoration: none;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-block;
+            font-weight: 500;
         }
 
         .btn:hover {
@@ -251,69 +254,150 @@
             background: #333333;
         }
 
-        /* Stats */
+        /* Stats - Compact */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: #ffffff;
-            border: 1px solid #e5e5e5;
-            padding: 20px;
+            border: 1px solid #e0e0e0;
+            padding: 12px 16px;
             text-align: center;
+            border-radius: 6px;
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             color: #666;
         }
 
-        /* Table */
+        /* Table - Minimal, Lean Design */
         .table-container {
             background: #ffffff;
-            border: 1px solid #e5e5e5;
-            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
             overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: calc(100vh - 400px);
+            position: relative;
         }
 
         .table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+        }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .table th {
-            background: #f8f8f8;
-            padding: 15px;
+            background: #fafafa;
+            padding: 10px 12px;
             text-align: left;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #e5e5e5;
+            letter-spacing: 0.5px;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
         }
 
         .table td {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f5f5f5;
+            color: #333;
+            line-height: 1.4;
         }
 
-        .table tr:hover {
-            background: #f8f8f8;
+        .table tbody tr {
+            transition: background 0.15s ease;
         }
 
-        .table tr:last-child td {
+        .table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .table tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        /* Compact cell content */
+        .table td {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table td.summary-cell {
+            max-width: 300px;
+            white-space: normal;
+            line-height: 1.4;
+        }
+
+        /* Pagination Styles */
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f5f5f5;
+        }
+
+        /* Compact controls */
+        .table-controls {
+            font-size: 12px;
+        }
+
+        .table-controls input,
+        .table-controls select {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        /* Scrollbar styling */
+        .table-wrapper::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
         /* Status badges */
@@ -957,10 +1041,40 @@
 
             <!-- Issues Table -->
             <div class="table-container">
-                <table class="table" id="issuesTable" style="display: none;">
-                    <thead id="tableHeader"></thead>
-                    <tbody id="issuesTableBody"></tbody>
-                </table>
+                <!-- Table Controls -->
+                <div class="table-controls" style="display: none; padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;" id="tableControls">
+                    <div class="table-info" style="font-size: 12px; color: #666;">
+                        <span id="tableInfo">Showing 0 of 0 tickets</span>
+                    </div>
+                    <div class="table-actions" style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="tableSearch" placeholder="Search table..." style="padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; width: 200px;" onkeyup="searchTable()">
+                        <select id="pageSize" onchange="changePageSize()" style="padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">
+                            <option value="25">25 per page</option>
+                            <option value="50" selected>50 per page</option>
+                            <option value="100">100 per page</option>
+                            <option value="200">200 per page</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Table Wrapper with Scroll -->
+                <div class="table-wrapper">
+                    <table class="table" id="issuesTable" style="display: none;">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="issuesTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none; padding: 12px 16px; background: #fafafa; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="pagination-info" style="font-size: 12px; color: #666;">
+                        <span id="paginationInfo">Page 1 of 1</span>
+                    </div>
+                    <div class="pagination-controls" style="display: flex; gap: 4px;">
+                        <button class="pagination-btn" id="prevPage" onclick="changePage(-1)" disabled style="padding: 6px 12px; border: 1px solid #e0e0e0; background: white; border-radius: 4px; cursor: pointer; font-size: 12px;">← Prev</button>
+                        <button class="pagination-btn" id="nextPage" onclick="changePage(1)" disabled style="padding: 6px 12px; border: 1px solid #e0e0e0; background: white; border-radius: 4px; cursor: pointer; font-size: 12px;">Next →</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1587,7 +1701,13 @@
         async function loadTableConfig() {
             try {
                 console.log('Loading table config from http://localhost:3001/api/table-config');
-                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now());
+                // Force reload by adding timestamp and cache-busting headers
+                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now(), {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 console.log('Response status:', response.status);
                 
                 if (!response.ok) {
@@ -1622,17 +1742,25 @@
             const tableHeader = document.getElementById('tableHeader');
             tableHeader.innerHTML = '';
             
-            if (!tableConfig || !tableConfig.defaultColumns) {
+            // Use allColumns (defaultColumns + userColumns) instead of just defaultColumns
+            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
+                ? tableConfig.allColumns 
+                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
+            
+            if (!columnsToUse || columnsToUse.length === 0) {
                 console.warn('No table configuration available for headers');
                 return;
             }
             
             const row = document.createElement('tr');
-            tableConfig.defaultColumns.forEach(column => {
-                const th = document.createElement('th');
-                th.textContent = column.label;
-                th.className = 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50';
-                row.appendChild(th);
+            columnsToUse.forEach(column => {
+                // Only show active columns (if active property exists)
+                if (column.active !== false) {
+                    const th = document.createElement('th');
+                    th.textContent = column.label || column.key;
+                    th.className = 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50';
+                    row.appendChild(th);
+                }
             });
             tableHeader.appendChild(row);
         }
@@ -1643,13 +1771,18 @@
 
             filtersContainer.innerHTML = '';
 
-            if (!tableConfig || !tableConfig.defaultColumns) {
+            // Use allColumns instead of just defaultColumns
+            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
+                ? tableConfig.allColumns 
+                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
+            
+            if (!columnsToUse || columnsToUse.length === 0) {
                 console.warn('No table configuration available for filters');
                 return;
             }
 
             // Create filter for each column
-            tableConfig.defaultColumns.forEach(column => {
+            columnsToUse.filter(col => col.active !== false).forEach(column => {
                 if (column && column.key && column.key !== 'url') {
                     const filterDiv = document.createElement('div');
                     filterDiv.className = 'filter-group';
@@ -1691,7 +1824,15 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    console.log('Data fetched successfully. Issues count:', data.issues ? data.issues.length : 0);
                     currentIssues = data.issues;
+                    
+                    // Show the table
+                    const issuesTable = document.getElementById('issuesTable');
+                    if (issuesTable) {
+                        issuesTable.style.display = 'table';
+                    }
+                    
                     displayIssues(data.issues);
                     updateStats(data.issues);
                     
@@ -1758,7 +1899,14 @@
                 console.log('Refresh response data:', data);
 
                 if (data.success) {
+                    console.log('Columns refreshed successfully. Issues count:', data.issues ? data.issues.length : 0);
                     currentIssues = data.issues;
+                    
+                    // Show the table
+                    if (issuesTable) {
+                        issuesTable.style.display = 'table';
+                    }
+                    
                     displayIssues(data.issues);
                     updateStats(data.issues);
                     
@@ -1791,34 +1939,138 @@
         }
 
         function displayIssues(issues) {
+            console.log('displayIssues called with', issues ? issues.length : 0, 'issues');
+            if (!Array.isArray(issues)) {
+                console.error('displayIssues: issues is not an array:', issues);
+                issues = [];
+            }
+            currentIssues = issues;
+            filteredIssues = [...issues];
+            currentPage = 1;
+            
+            // Ensure table config is loaded before rendering
+            if (!tableConfig || !tableConfig.allColumns || tableConfig.allColumns.length === 0) {
+                console.log('Table config not loaded yet, loading now...');
+                loadTableConfig().then(() => {
+                    console.log('Table config loaded, rendering table...');
+                    renderTable();
+                }).catch(err => {
+                    console.error('Failed to load table config:', err);
+                    renderTable(); // Render anyway with whatever we have
+                });
+            } else {
+                renderTable();
+            }
+        }
+
+        function renderTable() {
+            console.log('renderTable called. filteredIssues length:', filteredIssues ? filteredIssues.length : 'undefined');
             const tableBody = document.getElementById('issuesTableBody');
             const issuesTable = document.getElementById('issuesTable');
+            const tableControls = document.getElementById('tableControls');
+            const pagination = document.getElementById('pagination');
+            
+            if (!tableBody) {
+                console.error('Table body element not found!');
+                return;
+            }
             
             tableBody.innerHTML = '';
 
-            if (!Array.isArray(issues)) {
-                console.warn('displayIssues: issues is not an array', issues);
-                issues = [];
+            if (!Array.isArray(filteredIssues)) {
+                console.warn('filteredIssues is not an array, setting to empty array');
+                filteredIssues = [];
             }
 
-            if (issues.length === 0) {
+            // Use allColumns (defaultColumns + userColumns) instead of just defaultColumns
+            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
+                ? tableConfig.allColumns 
+                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
+            
+            console.log('Columns to use:', columnsToUse.length, 'Table config:', tableConfig ? 'exists' : 'missing');
+            
+            // Filter to only active columns
+            const activeColumns = columnsToUse.filter(col => col.active !== false);
+            
+            console.log('Active columns:', activeColumns.length);
+            
+            // If no columns configured, show error message
+            if (activeColumns.length === 0) {
                 const row = document.createElement('tr');
                 const td = document.createElement('td');
-                const columnCount = tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns.length : 7;
-                td.colSpan = columnCount;
+                td.colSpan = 10; // Use a reasonable default
                 td.style.textAlign = 'center';
-                td.style.color = '#666';
+                td.style.color = '#999';
+                td.style.padding = '40px';
+                td.textContent = 'No columns configured. Please configure columns in the Config page.';
+                row.appendChild(td);
+                tableBody.appendChild(row);
+                if (tableControls) tableControls.style.display = 'none';
+                if (pagination) pagination.style.display = 'none';
+                console.warn('No active columns found. Table config:', tableConfig);
+                return;
+            }
+            
+            if (filteredIssues.length === 0) {
+                const row = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = activeColumns.length;
+                td.style.textAlign = 'center';
+                td.style.color = '#999';
+                td.style.padding = '40px';
                 td.textContent = 'No issues found';
                 row.appendChild(td);
                 tableBody.appendChild(row);
+                if (tableControls) tableControls.style.display = 'none';
+                if (pagination) pagination.style.display = 'none';
             } else {
-                issues.forEach(issue => {
+                // Ensure filteredIssues is an array with valid length
+                const totalIssues = Array.isArray(filteredIssues) ? filteredIssues.length : 0;
+                
+                // Calculate pagination
+                const totalPages = totalIssues > 0 ? Math.ceil(totalIssues / pageSize) : 1;
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, totalIssues);
+                const pageIssues = totalIssues > 0 ? filteredIssues.slice(startIndex, endIndex) : [];
+                
+                // Show controls
+                if (tableControls) tableControls.style.display = 'flex';
+                if (pagination) pagination.style.display = 'flex';
+                
+                // Update info
+                if (document.getElementById('tableInfo')) {
+                    const infoText = totalIssues > 0 
+                        ? `Showing ${startIndex + 1}-${endIndex} of ${totalIssues} tickets`
+                        : 'No tickets to display';
+                    document.getElementById('tableInfo').textContent = infoText;
+                }
+                if (document.getElementById('paginationInfo')) {
+                    const pageText = totalPages > 0 
+                        ? `Page ${currentPage} of ${totalPages}`
+                        : 'Page 1 of 1';
+                    document.getElementById('paginationInfo').textContent = pageText;
+                }
+                
+                // Update pagination buttons
+                if (document.getElementById('prevPage')) {
+                    document.getElementById('prevPage').disabled = currentPage === 1 || totalPages === 0;
+                }
+                if (document.getElementById('nextPage')) {
+                    document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+                }
+                
+                // Render issues
+                pageIssues.forEach(issue => {
                     const row = document.createElement('tr');
                     
-                    const columns = tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : [];
-                    columns.forEach(column => {
+                    activeColumns.forEach(column => {
                         const td = document.createElement('td');
                         const value = issue[column.key] || '';
+                        
+                        // Add class for summary column to allow wrapping
+                        if (column.key === 'summary') {
+                            td.className = 'summary-cell';
+                        }
                         
                         switch (column.type) {
                             case 'link':
@@ -1882,7 +2134,12 @@
                                 break;
                             case 'text':
                             default:
-                                td.textContent = value;
+                                // Special handling for customfield_23073 - summarize it
+                                if (column.key === 'customfield_23073' || column.jiraField === 'customfield_23073') {
+                                    displaySummarizedField(td, value, issue.key, column.key);
+                                } else {
+                                    td.textContent = value;
+                                }
                                 break;
                         }
                         
@@ -1896,7 +2153,7 @@
             issuesTable.style.display = 'table';
             
             // Populate filter options after displaying issues
-            populateFilterOptions(issues);
+            populateFilterOptions(currentIssues);
         }
 
         function populateFilterOptions(issues) {
@@ -1923,51 +2180,105 @@
             });
         }
 
-        function applyFilters() {
-            if (!tableConfig || !tableConfig.defaultColumns) return;
+        // Pagination and search functions
+        function changePageSize() {
+            const select = document.getElementById('pageSize');
+            if (select) {
+                pageSize = parseInt(select.value);
+                currentPage = 1;
+                renderTable();
+            }
+        }
 
-            const allRows = document.querySelectorAll('#issuesTableBody tr');
+        function changePage(direction) {
+            const totalIssues = Array.isArray(filteredIssues) ? filteredIssues.length : 0;
+            const totalPages = totalIssues > 0 ? Math.ceil(totalIssues / pageSize) : 1;
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages && totalPages > 0) {
+                currentPage = newPage;
+                renderTable();
+                // Scroll to top of table
+                document.querySelector('.table-wrapper')?.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function searchTable() {
+            const searchInput = document.getElementById('tableSearch');
+            if (searchInput) {
+                searchQuery = searchInput.value.toLowerCase().trim();
+                currentPage = 1;
+                applyFiltersAndSearch();
+            }
+        }
+
+        function applyFiltersAndSearch() {
+            // Start with all current issues
+            let filtered = [...currentIssues];
             
-            allRows.forEach(row => {
-                let shouldShow = true;
-                
-                tableConfig.defaultColumns.forEach(column => {
+            // Apply search query
+            if (searchQuery) {
+                filtered = filtered.filter(issue => {
+                    return Object.values(issue).some(value => 
+                        String(value).toLowerCase().includes(searchQuery)
+                    );
+                });
+            }
+            
+            // Apply column filters
+            if (tableConfig && tableConfig.allColumns) {
+                const columnsToUse = tableConfig.allColumns.filter(col => col.active !== false);
+                columnsToUse.forEach(column => {
                     if (column.key === 'url') return;
-                    
                     const filterSelect = document.getElementById(`filter-${column.key}`);
-                    if (!filterSelect) return;
-                    
-                    const selectedValues = Array.from(filterSelect.selectedOptions).map(option => option.value);
-                    
-                    if (selectedValues.length > 0 && !selectedValues.includes('')) {
-                        const cellValue = row.cells[tableConfig.defaultColumns.indexOf(column)]?.textContent || '';
-                        if (!selectedValues.includes(cellValue)) {
-                            shouldShow = false;
+                    if (filterSelect) {
+                        const selectedValues = Array.from(filterSelect.selectedOptions)
+                            .map(option => option.value)
+                            .filter(v => v !== '');
+                        if (selectedValues.length > 0) {
+                            filtered = filtered.filter(issue => {
+                                const cellValue = String(issue[column.key] || '').toLowerCase();
+                                return selectedValues.some(val => 
+                                    cellValue.includes(val.toLowerCase())
+                                );
+                            });
                         }
                     }
                 });
-                
-                row.style.display = shouldShow ? '' : 'none';
-            });
+            }
+            
+            filteredIssues = filtered;
+            renderTable();
+        }
+
+        function applyFilters() {
+            applyFiltersAndSearch();
         }
 
         function clearFilters() {
-            if (!tableConfig || !tableConfig.defaultColumns) return;
-
-            tableConfig.defaultColumns.forEach(column => {
-                if (column.key === 'url') return;
-                
-                const filterSelect = document.getElementById(`filter-${column.key}`);
-                if (filterSelect) {
-                    filterSelect.selectedIndex = 0;
-                }
-            });
+            // Use allColumns instead of just defaultColumns
+            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
+                ? tableConfig.allColumns.filter(col => col.active !== false)
+                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
             
-            // Show all rows
-            const allRows = document.querySelectorAll('#issuesTableBody tr');
-            allRows.forEach(row => {
-                row.style.display = '';
-            });
+            if (columnsToUse && columnsToUse.length > 0) {
+                columnsToUse.forEach(column => {
+                    if (column.key === 'url') return;
+                    const filterSelect = document.getElementById(`filter-${column.key}`);
+                    if (filterSelect) {
+                        filterSelect.selectedIndex = 0;
+                    }
+                });
+            }
+            
+            // Clear search
+            const searchInput = document.getElementById('tableSearch');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            searchQuery = '';
+            
+            // Reapply filters (which will show all)
+            applyFiltersAndSearch();
         }
 
         // Generate complex JQL query for feature/initiative
@@ -2402,6 +2713,98 @@
 
         function closeConfluenceModal() {
             document.getElementById('confluenceModal').style.display = 'none';
+        }
+
+        // Display summarized field (for customfield_23073)
+        async function displaySummarizedField(td, value, issueKey, fieldKey) {
+            if (!value || value.trim() === '') {
+                td.textContent = '-';
+                td.style.color = '#999';
+                return;
+            }
+            
+            // Show loading state
+            td.innerHTML = '<span style="color: #666; font-size: 12px;">Summarizing...</span>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/summarize-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: value })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.display) {
+                    // Create a tooltip with full text
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.style.cssText = 'cursor: help; position: relative;';
+                    summaryDiv.textContent = data.display;
+                    summaryDiv.title = value; // Full text on hover
+                    
+                    // Add click to show full text
+                    summaryDiv.onclick = () => {
+                        showFullTextModal(value, issueKey, fieldKey, data.display);
+                    };
+                    
+                    td.appendChild(summaryDiv);
+                    td.style.color = '#333';
+                } else {
+                    // Fallback to truncated text
+                    const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                    td.textContent = truncated;
+                    td.title = value; // Full text on hover
+                }
+            } catch (err) {
+                console.error('Error summarizing field:', err);
+                // Fallback to truncated text
+                const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                td.textContent = truncated;
+                td.title = value; // Full text on hover
+            }
+        }
+
+        // Show full text modal
+        function showFullTextModal(fullText, issueKey, fieldKey, summary) {
+            // Create modal similar to Confluence modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>📄 ${fieldKey} - ${issueKey}</h2>
+                        <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div style="margin-bottom: 15px;">
+                            <h3 style="font-size: 16px; margin-bottom: 10px; color: #666;">Summary:</h3>
+                            <div style="background: #f0f9ff; padding: 12px; border-radius: 4px; border-left: 4px solid #3b82f6;">
+                                <p style="margin: 0; line-height: 1.6;">${summary || 'No summary available'}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 10px; color: #666;">Full Text:</h3>
+                            <div style="background: #f8f8f8; padding: 15px; border-radius: 4px; max-height: 400px; overflow-y: auto;">
+                                <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-family: monospace; font-size: 13px;">${fullText}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Close on outside click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
         }
 
         // Fetch all Confluence summaries for executive view

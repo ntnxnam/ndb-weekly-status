@@ -1,0 +1,14 @@
+{
+  "jira": {
+    "baseUrl": "https://jira.nutanix.com/",
+    "oauth": {
+      "clientId": "YOUR_CLIENT_ID_HERE",
+      "clientSecret": "YOUR_CLIENT_SECRET_HERE",
+      "redirectUri": "http://localhost:8080/oauth/callback",
+      "scope": "read:jira-work",
+      "authorizationUrl": "https://jira.nutanix.com/oauth/authorize",
+      "tokenUrl": "https://jira.nutanix.com/oauth/token"
+    }
+  }
+}
+

@@ -1,0 +1,53 @@
+{
+  "userColumns": [
+    {
+      "key": "assignee",
+      "label": "Assignee",
+      "type": "text",
+      "jiraField": "assignee",
+      "active": true
+    },
+    {
+      "key": "summary",
+      "label": "Summary",
+      "type": "text",
+      "jiraField": "summary",
+      "active": true
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "text",
+      "jiraField": "status",
+      "active": true
+    },
+    {
+      "key": "priority",
+      "label": "Priority",
+      "type": "text",
+      "jiraField": "priority",
+      "active": true
+    },
+    {
+      "key": "resolution",
+      "label": "Resolution",
+      "type": "text",
+      "jiraField": "resolution",
+      "active": true
+    },
+    {
+      "key": "customfield_23073",
+      "label": "Customfield 23073",
+      "type": "text",
+      "jiraField": "customfield_23073",
+      "active": true
+    },
+    {
+      "key": "customfield_23560",
+      "label": "Customfield 23560",
+      "type": "text",
+      "jiraField": "customfield_23560",
+      "active": true
+    }
+  ]
+}

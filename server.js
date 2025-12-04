@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const JiraClient = require('./jira-client-clean');
 const ConfluenceClient = require('./confluence-client');
+const TextProcessor = require('./text-processor');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -228,6 +229,56 @@ app.get('/api/backend-config', (req, res) => {
   }
 });
 
+// Fetch all field names from Jira
+app.get('/api/field-names', async (req, res) => {
+  try {
+    const userToken = req.headers['x-jira-token'];
+    
+    if (!userToken) {
+      return res.status(401).json({
+        success: false,
+        error: 'No authentication token provided. Please authenticate first.'
+      });
+    }
+    
+    const jiraConfig = jiraClient.configManager.getJiraConfig();
+    const baseUrl = jiraConfig.baseUrl.replace(/\/$/, '');
+    
+    const axios = require('axios');
+    const fieldsResponse = await axios.get(`${baseUrl}/rest/api/2/field`, {
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    const fieldMap = {};
+    if (fieldsResponse.data && Array.isArray(fieldsResponse.data)) {
+      fieldsResponse.data.forEach(field => {
+        fieldMap[field.id] = field.name;
+        // Also map by key if different from id
+        if (field.key && field.key !== field.id) {
+          fieldMap[field.key] = field.name;
+        }
+      });
+    }
+    
+    console.log(`📋 [API] /api/field-names - Loaded ${Object.keys(fieldMap).length} field names`);
+    
+    res.json({
+      success: true,
+      fieldMap: fieldMap,
+      count: Object.keys(fieldMap).length
+    });
+  } catch (error) {
+    console.error('❌ [API] /api/field-names - Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch field names'
+    });
+  }
+});
+
 app.post('/api/save-column-config', express.json(), (req, res) => {
   try {
     const { userColumns } = req.body;
@@ -401,6 +452,213 @@ app.post('/api/confluence/summaries', express.json(), async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to fetch Confluence summaries'
+    });
+  }
+});
+
+// Summarize text (for customfield_23073 and similar fields)
+app.post('/api/summarize-text', express.json(), async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { text } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        error: 'Text is required'
+      });
+    }
+    
+    console.log(`📝 [API] /api/summarize-text - Summarizing text (${text.length} chars)`);
+    
+    const textProcessor = new TextProcessor();
+    const result = textProcessor.summarize(text);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ [API] /api/summarize-text - Success in ${duration}ms`);
+    
+    res.json({
+      success: true,
+      summary: result.summary,
+      date: result.date,
+      display: result.display
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ [API] /api/summarize-text - Failed after ${duration}ms:`, error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to summarize text'
+    });
+  }
+});
+
+// Batch summarize texts
+app.post('/api/summarize-texts', express.json(), async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { texts } = req.body;
+    
+    if (!Array.isArray(texts)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Texts array is required'
+      });
+    }
+    
+    console.log(`📝 [API] /api/summarize-texts - Summarizing ${texts.length} texts`);
+    
+    const textProcessor = new TextProcessor();
+    const results = textProcessor.batchSummarize(texts);
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ [API] /api/summarize-texts - Success in ${duration}ms`);
+    
+    res.json({
+      success: true,
+      summaries: results
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ [API] /api/summarize-texts - Failed after ${duration}ms:`, error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to summarize texts'
+    });
+  }
+});
+
+// Auto-discover fields from Jira tickets
+app.get('/api/discover-fields', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const jql = req.query.jql || 'filter = 165194'; // Use provided JQL or default
+    const userToken = req.headers['x-jira-token'];
+    
+    if (!userToken) {
+      return res.status(401).json({
+        success: false,
+        error: 'No authentication token provided. Please authenticate first.'
+      });
+    }
+    
+    console.log(`🔍 [API] /api/discover-fields - Discovering fields from JQL: ${jql}`);
+    
+    // First, fetch field metadata from Jira's field API to get names
+    const jiraConfig = jiraClient.configManager.getJiraConfig();
+    const baseUrl = jiraConfig.baseUrl.replace(/\/$/, '');
+    
+    let fieldMetadata = {};
+    try {
+      const axios = require('axios');
+      const fieldsResponse = await axios.get(`${baseUrl}/rest/api/2/field`, {
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      // Create a map of field ID to field name
+      if (fieldsResponse.data && Array.isArray(fieldsResponse.data)) {
+        fieldsResponse.data.forEach(field => {
+          fieldMetadata[field.id] = field.name;
+          // Also map by key if different from id
+          if (field.key && field.key !== field.id) {
+            fieldMetadata[field.key] = field.name;
+          }
+        });
+      }
+      console.log(`📋 [API] /api/discover-fields - Loaded ${Object.keys(fieldMetadata).length} field names from Jira`);
+      console.log(`📋 [API] Sample field mappings:`, Object.keys(fieldMetadata).slice(0, 5).map(k => `${k} -> ${fieldMetadata[k]}`));
+    } catch (fieldError) {
+      console.warn(`⚠️ [API] /api/discover-fields - Could not fetch field metadata: ${fieldError.message}`);
+      console.warn(`⚠️ [API] Field error details:`, fieldError.response?.data || fieldError.message);
+      // Continue without field names - we'll just use IDs
+    }
+    
+    // Fetch just 1 ticket to discover all available fields
+    const data = await jiraClient.fetchAllData(jql, userToken);
+    
+    if (!data.issues || data.issues.length === 0) {
+      return res.json({
+        success: false,
+        error: 'No tickets found. Please check your JQL query.'
+      });
+    }
+    
+    // Extract all field names from the first ticket
+    const sampleIssue = data.issues[0];
+    const discoveredFields = [];
+    const fieldMap = {}; // Map field ID to { id, name }
+    
+    // Add standard fields with their names
+    const standardFieldNames = {
+      'key': 'Key',
+      'summary': 'Summary',
+      'status': 'Status',
+      'assignee': 'Assignee',
+      'priority': 'Priority',
+      'issuetype': 'Issue Type',
+      'project': 'Project',
+      'created': 'Created',
+      'updated': 'Updated',
+      'resolution': 'Resolution',
+      'labels': 'Labels',
+      'components': 'Components',
+      'fixVersions': 'Fix Versions'
+    };
+    
+    Object.keys(standardFieldNames).forEach(fieldId => {
+      discoveredFields.push(fieldId);
+      fieldMap[fieldId] = {
+        id: fieldId,
+        name: standardFieldNames[fieldId]
+      };
+    });
+    
+    if (sampleIssue.fields) {
+      // Get all field names from the fields object
+      Object.keys(sampleIssue.fields).forEach(fieldName => {
+        if (!discoveredFields.includes(fieldName)) {
+          discoveredFields.push(fieldName);
+          // Get the field name from metadata, or use a formatted version of the ID
+          const fieldNameFromMetadata = fieldMetadata[fieldName] || null;
+          fieldMap[fieldName] = {
+            id: fieldName,
+            name: fieldNameFromMetadata || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+          };
+        }
+      });
+    }
+    
+    // Sort fields (standard fields first, then custom fields)
+    discoveredFields.sort((a, b) => {
+      const aIsCustom = a.startsWith('customfield_');
+      const bIsCustom = b.startsWith('customfield_');
+      if (aIsCustom && !bIsCustom) return 1;
+      if (!aIsCustom && bIsCustom) return -1;
+      return a.localeCompare(b);
+    });
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ [API] /api/discover-fields - Discovered ${discoveredFields.length} fields in ${duration}ms`);
+    
+    res.json({
+      success: true,
+      fields: discoveredFields,
+      fieldMap: fieldMap, // Include field name mapping
+      count: discoveredFields.length,
+      message: `Discovered ${discoveredFields.length} fields from your tickets`
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ [API] /api/discover-fields - Failed after ${duration}ms:`, error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to discover fields'
     });
   }
 });

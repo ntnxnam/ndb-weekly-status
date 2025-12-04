@@ -1,0 +1,36 @@
+{
+  "columns": [
+    {
+      "key": "key",
+      "label": "Key",
+      "type": "link",
+      "jiraField": "key"
+    },
+    {
+      "key": "summary",
+      "label": "Summary",
+      "type": "text",
+      "jiraField": "summary"
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "badge",
+      "jiraField": "status"
+    },
+    {
+      "key": "customfield_35863",
+      "label": "Custom Field 35863",
+      "type": "text",
+      "jiraField": "customfield_35863"
+    }
+  ],
+  "jira": {
+    "baseUrl": "https://jira.nutanix.com/",
+    "apiToken": "loaded-from-jira-key-private.txt",
+    "jql": "filter = 'NDB-StatusUpdates'"
+  },
+  "server": {
+    "port": 6000
+  }
+}

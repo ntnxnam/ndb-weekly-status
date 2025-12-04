@@ -434,10 +434,41 @@
         <!-- Search Section -->
         <div class="search-section">
             <h2 class="search-title">Search JIRA Fields</h2>
+            <div id="fieldsStatus" style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Loading fields...
+            </div>
             <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Type to search JIRA fields...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Type to search JIRA fields (min 2 characters)...">
                 <span class="search-icon">🔍</span>
                 <div id="searchResults" class="search-results"></div>
+            </div>
+            
+            <!-- Auto-Discover Fields -->
+            <div class="add-custom-field" style="margin-top: 15px; padding: 15px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 4px;">
+                <div class="add-custom-field-title" style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #059669;">
+                    🔍 Auto-Discover All Fields from Your Tickets
+                </div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    Click the button below to automatically discover all available fields from your Jira tickets. This will add all fields (including custom fields) to the searchable list.
+                </p>
+                <button class="btn primary" onclick="discoverFieldsFromTickets()" id="discoverFieldsBtn" style="padding: 10px 20px; font-size: 14px; background: #10b981; border-color: #10b981;">
+                    🔍 Discover Fields from Tickets
+                </button>
+                <div id="discoverStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+            
+            <!-- Manual Custom Field Input -->
+            <div class="add-custom-field" style="margin-top: 15px; padding: 15px; background: #f0f9ff; border: 1px solid #3b82f6; border-radius: 4px;">
+                <div class="add-custom-field-title" style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #1e40af;">
+                    ➕ Add Custom Field Manually
+                </div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                    Or enter a custom field ID manually (e.g., customfield_23073, cf[23073], or just 23073)
+                </p>
+                <div class="custom-field-input-group" style="display: flex; gap: 10px;">
+                    <input type="text" id="customFieldInput" class="custom-field-input" style="flex: 1; padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 4px; font-size: 14px;" placeholder="customfield_23073 or 23073">
+                    <button class="btn primary" onclick="addCustomFieldManually()" style="padding: 8px 16px; font-size: 14px;">Add Field</button>
+                </div>
             </div>
         </div>
 
@@ -482,6 +513,7 @@
 
     <script>
         let allJiraFields = [];
+        let fieldNameMap = {}; // Map field ID to field name: { fieldId: fieldName }
         let selectedFields = [];
         let configuredColumns = [];
         let draggedElement = null;
@@ -498,7 +530,7 @@
         // Load table configuration
         async function loadTableConfig() {
             try {
-                const response = await fetch('http://localhost:8080/api/table-config?t=' + Date.now());
+                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now());
                 const data = await response.json();
                 
                 if (data.success) {
@@ -515,19 +547,89 @@
 
         // Load JIRA fields
         async function loadJiraFields() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
             try {
-                const response = await fetch('http://localhost:8080/api/backend-config?t=' + Date.now());
+                loading.style.display = 'block';
+                error.style.display = 'none';
+                
+                const response = await fetch('http://localhost:3001/api/backend-config?t=' + Date.now());
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.success && data.config && data.config.allPossibleFields) {
                     allJiraFields = data.config.allPossibleFields || [];
-                    console.log('JIRA fields loaded:', allJiraFields.length);
+                    console.log('✅ JIRA fields loaded:', allJiraFields.length, 'fields');
+                    
+                    // Also try to load field names if user is authenticated
+                    await loadFieldNames();
+                    
+                    // Update status indicator
+                    const statusDiv = document.getElementById('fieldsStatus');
+                    if (statusDiv) {
+                        statusDiv.textContent = `✅ ${allJiraFields.length} JIRA fields loaded. Start typing to search...`;
+                        statusDiv.style.color = '#10b981';
+                    }
+                    
+                    if (allJiraFields.length === 0) {
+                        throw new Error('No JIRA fields available. Please check your configuration.');
+                    }
                 } else {
-                    throw new Error(data.error || 'Failed to load JIRA fields');
+                    throw new Error(data.error || 'Failed to load JIRA fields - invalid response format');
                 }
             } catch (err) {
-                console.error('Error loading JIRA fields:', err);
+                console.error('❌ Error loading JIRA fields:', err);
+                
+                // Update status indicator
+                const statusDiv = document.getElementById('fieldsStatus');
+                if (statusDiv) {
+                    statusDiv.textContent = `❌ Failed to load fields: ${err.message}`;
+                    statusDiv.style.color = '#dc2626';
+                }
+                
+                error.style.display = 'block';
+                document.getElementById('errorMessage').textContent = 
+                    'Failed to load JIRA fields: ' + err.message + '. Please refresh the page or check your connection.';
                 allJiraFields = [];
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Load field names from Jira
+        async function loadFieldNames() {
+            try {
+                const storedToken = localStorage.getItem('jira_bearer_token');
+                if (!storedToken) {
+                    console.log('ℹ️ No token available, skipping field name load');
+                    return;
+                }
+                
+                const response = await fetch('http://localhost:3001/api/field-names', {
+                    headers: {
+                        'X-Jira-Token': storedToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.fieldMap) {
+                        Object.keys(data.fieldMap).forEach(fieldId => {
+                            fieldNameMap[fieldId] = data.fieldMap[fieldId];
+                        });
+                        console.log(`✅ Loaded ${Object.keys(fieldNameMap).length} field names`);
+                    }
+                } else {
+                    console.warn('⚠️ Could not load field names:', response.status);
+                }
+            } catch (err) {
+                console.warn('⚠️ Error loading field names:', err.message);
+                // Non-critical, continue without names
             }
         }
 
@@ -539,16 +641,36 @@
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase().trim();
                 
-                if (query.length < 2) {
+                if (query.length === 0) {
                     searchResults.classList.remove('show');
                     return;
                 }
 
+                if (allJiraFields.length === 0) {
+                    searchResults.innerHTML = '<div class="search-result-item" style="padding: 20px; text-align: center; color: #dc2626;">❌ No JIRA fields loaded. Please refresh the page or check the error message above.</div>';
+                    searchResults.classList.add('show');
+                    return;
+                }
+
+                // Search with at least 1 character
                 const filtered = allJiraFields.filter(field => 
                     field.toLowerCase().includes(query)
                 ).slice(0, 20); // Limit to 20 results
 
-                displaySearchResults(filtered);
+                console.log(`Searching for "${query}": Found ${filtered.length} fields out of ${allJiraFields.length} total`);
+                displaySearchResults(filtered, query);
+            });
+            
+            // Show all fields when input is focused and empty
+            searchInput.addEventListener('focus', (e) => {
+                if (allJiraFields.length > 0 && e.target.value.length === 0) {
+                    const topFields = allJiraFields.slice(0, 10);
+                    displaySearchResults(topFields, '');
+                    const statusDiv = document.getElementById('fieldsStatus');
+                    if (statusDiv) {
+                        statusDiv.textContent = `✅ ${allJiraFields.length} JIRA fields available. Showing top 10. Type to search...`;
+                    }
+                }
             });
 
             // Hide results when clicking outside
@@ -560,23 +682,60 @@
         }
 
         // Display search results
-        function displaySearchResults(fields) {
+        function displaySearchResults(fields, query = '') {
             const searchResults = document.getElementById('searchResults');
             searchResults.innerHTML = '';
 
             if (fields.length === 0) {
-                searchResults.innerHTML = '<div class="search-result-item">No fields found</div>';
+                searchResults.innerHTML = `
+                    <div class="search-result-item" style="padding: 20px; text-align: center; color: #666;">
+                        No fields found matching "${query}". Try a different search term.
+                    </div>
+                `;
             } else {
+                // Show count if there are more results
+                if (query && allJiraFields.filter(f => f.toLowerCase().includes(query)).length > 20) {
+                    const totalMatches = allJiraFields.filter(f => f.toLowerCase().includes(query)).length;
+                    const header = document.createElement('div');
+                    header.className = 'search-result-item';
+                    header.style.background = '#f8f8f8';
+                    header.style.fontSize = '12px';
+                    header.style.color = '#666';
+                    header.textContent = `Showing 20 of ${totalMatches} matching fields`;
+                    searchResults.appendChild(header);
+                }
+                
                 fields.forEach(field => {
                     const isSelected = selectedFields.some(f => f.field === field);
                     const item = document.createElement('div');
                     item.className = 'search-result-item';
+                    
+                    // Get field name from map - prioritize actual Jira field name
+                    let fieldName = fieldNameMap[field];
+                    if (!fieldName) {
+                        // Only use formatted ID as fallback if we don't have a real name
+                        // This means field names haven't been loaded yet
+                        fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    }
+                    const fieldId = field;
+                    
+                    // Highlight matching text in both name and ID
+                    const displayName = query ? highlightMatch(fieldName, query) : fieldName;
+                    const displayId = query ? highlightMatch(fieldId, query) : fieldId;
+                    
+                    // Show different styling if we have a real name vs formatted ID
+                    const hasRealName = fieldNameMap[field] !== undefined;
+                    
                     item.innerHTML = `
-                        <div>
-                            <div class="field-name">${field}</div>
-                            <div class="field-type">${getFieldType(field)}</div>
+                        <div style="flex: 1;">
+                            <div class="field-name" style="font-weight: ${hasRealName ? '600' : '500'}; margin-bottom: 2px; color: ${hasRealName ? '#000' : '#666'};">
+                                ${displayName}
+                                ${!hasRealName ? '<span style="font-size: 10px; color: #999; margin-left: 6px;">(ID only)</span>' : ''}
+                            </div>
+                            <div style="font-size: 11px; color: #666; font-family: monospace;">${displayId}</div>
+                            <div class="field-type" style="margin-top: 4px;">${getFieldType(field)}</div>
                         </div>
-                        <button class="add-btn" ${isSelected ? 'disabled' : ''} onclick="addField('${field}')">
+                        <button class="add-btn" ${isSelected ? 'disabled' : ''} onclick="addField('${field.replace(/'/g, "\\'")}')">
                             ${isSelected ? 'Added' : 'Add'}
                         </button>
                     `;
@@ -585,6 +744,13 @@
             }
 
             searchResults.classList.add('show');
+        }
+        
+        // Highlight matching text in search results
+        function highlightMatch(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<strong>$1</strong>');
         }
 
         // Get field type based on field name
@@ -621,6 +787,143 @@
             updateSearchResults();
         }
 
+        // Auto-discover fields from tickets
+        async function discoverFieldsFromTickets() {
+            const btn = document.getElementById('discoverFieldsBtn');
+            const statusDiv = document.getElementById('discoverStatus');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Discovering...';
+            statusDiv.textContent = 'Fetching a sample ticket to discover all available fields...';
+            statusDiv.style.color = '#666';
+            
+            try {
+                // Get JQL from config or use default
+                const jql = 'filter = 165194'; // Default query, can be made configurable
+                
+                // Get token from localStorage (same as main app)
+                const storedToken = localStorage.getItem('jira_bearer_token');
+                if (!storedToken) {
+                    throw new Error('Please authenticate first. Go to the main dashboard and click Authenticate.');
+                }
+                
+                const response = await fetch(
+                    `http://localhost:3001/api/discover-fields?jql=${encodeURIComponent(jql)}`,
+                    {
+                        headers: {
+                            'X-Jira-Token': storedToken
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                if (data.success && data.fields) {
+                    // Update field name map if provided
+                    if (data.fieldMap) {
+                        Object.keys(data.fieldMap).forEach(fieldId => {
+                            if (data.fieldMap[fieldId] && data.fieldMap[fieldId].name) {
+                                fieldNameMap[fieldId] = data.fieldMap[fieldId].name;
+                            }
+                        });
+                    }
+                    
+                    // Add all discovered fields to allJiraFields
+                    let addedCount = 0;
+                    data.fields.forEach(field => {
+                        if (!allJiraFields.includes(field)) {
+                            allJiraFields.push(field);
+                            addedCount++;
+                        }
+                    });
+                    
+                    // Sort fields
+                    allJiraFields.sort();
+                    
+                    // Update status
+                    statusDiv.textContent = `✅ Discovered ${data.count} fields! ${addedCount} new fields added to the list.`;
+                    statusDiv.style.color = '#10b981';
+                    
+                    // Update the fields status
+                    const fieldsStatus = document.getElementById('fieldsStatus');
+                    if (fieldsStatus) {
+                        fieldsStatus.textContent = `✅ ${allJiraFields.length} JIRA fields available (${addedCount} newly discovered). Type to search...`;
+                        fieldsStatus.style.color = '#10b981';
+                    }
+                    
+                    // Refresh search if there's a query
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput && searchInput.value) {
+                        updateSearchResults();
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to discover fields');
+                }
+            } catch (err) {
+                console.error('Error discovering fields:', err);
+                statusDiv.textContent = `❌ Error: ${err.message}`;
+                statusDiv.style.color = '#dc2626';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Discover Fields from Tickets';
+            }
+        }
+
+        // Add custom field manually
+        function addCustomFieldManually() {
+            const input = document.getElementById('customFieldInput');
+            let fieldId = input.value.trim();
+            
+            if (!fieldId) {
+                alert('Please enter a custom field ID');
+                return;
+            }
+            
+            // Normalize the field ID format
+            // Handle formats like: cf[23073], 23073, customfield_23073
+            if (fieldId.match(/^cf\[(\d+)\]$/i)) {
+                // Extract number from cf[23073]
+                fieldId = 'customfield_' + fieldId.match(/\[(\d+)\]/)[1];
+            } else if (fieldId.match(/^\d+$/)) {
+                // Just a number like 23073
+                fieldId = 'customfield_' + fieldId;
+            } else if (!fieldId.startsWith('customfield_')) {
+                // Try to extract number if it's in a different format
+                const match = fieldId.match(/(\d+)/);
+                if (match) {
+                    fieldId = 'customfield_' + match[1];
+                } else {
+                    // Assume it's already in the right format or add prefix
+                    if (!fieldId.includes('customfield')) {
+                        fieldId = 'customfield_' + fieldId;
+                    }
+                }
+            }
+            
+            // Check if already in allJiraFields, if not add it
+            if (!allJiraFields.includes(fieldId)) {
+                allJiraFields.push(fieldId);
+                allJiraFields.sort();
+            }
+            
+            // Add to selected fields
+            addField(fieldId);
+            
+            // Clear input
+            input.value = '';
+            
+            // Show success message
+            const statusDiv = document.getElementById('fieldsStatus');
+            if (statusDiv) {
+                statusDiv.textContent = `✅ Added custom field: ${fieldId}`;
+                statusDiv.style.color = '#10b981';
+                setTimeout(() => {
+                    statusDiv.textContent = `✅ ${allJiraFields.length} JIRA fields available. Type to search...`;
+                    statusDiv.style.color = '#666';
+                }, 2000);
+            }
+        }
+
         // Update selected fields display
         function updateSelectedFields() {
             const selectedFieldsDiv = document.getElementById('selectedFields');
@@ -651,12 +954,17 @@
         // Update search results to show added status
         function updateSearchResults() {
             const searchInput = document.getElementById('searchInput');
-            if (searchInput.value.length >= 2) {
-                const query = searchInput.value.toLowerCase().trim();
+            const query = searchInput.value.toLowerCase().trim();
+            
+            if (query.length > 0) {
                 const filtered = allJiraFields.filter(field => 
                     field.toLowerCase().includes(query)
                 ).slice(0, 20);
-                displaySearchResults(filtered);
+                displaySearchResults(filtered, query);
+            } else if (searchInput === document.activeElement) {
+                // Show top 10 if input is focused
+                const topFields = allJiraFields.slice(0, 10);
+                displaySearchResults(topFields, '');
             }
         }
 
@@ -793,7 +1101,7 @@
         // Save configuration
         async function saveConfiguration() {
             try {
-                const response = await fetch('http://localhost:8080/api/save-column-config', {
+                const response = await fetch('http://localhost:3001/api/save-column-config', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

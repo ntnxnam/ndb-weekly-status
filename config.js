@@ -120,10 +120,10 @@ class ConfigManager {
       },
       {
         key: 'ndb_2_11_wishlist',
-        label: '2.11 Wishlist',
+        label: 'Wishlist',
         type: 'labelCheck',
         jiraField: 'labels',
-        labelToCheck: 'ndb-2.11-wishlist',
+        labelPattern: 'fixVersion',
         isDefault: true,
         isEditable: false
       },
@@ -192,6 +192,7 @@ class ConfigManager {
       'customfield_10048',
       'customfield_10049',
       'customfield_10050',
+      'customfield_23073',
       'customfield_35863'
     ];
   }
@@ -220,10 +221,38 @@ class ConfigManager {
 
   getTableConfig() {
     const userConfig = this.getUserConfig();
+    
+    // Merge columns, avoiding duplicates based on key
+    const defaultCols = this.config.defaultColumns || [];
+    const userCols = userConfig.userColumns || [];
+    
+    // Create a map to track columns by key
+    const columnMap = new Map();
+    
+    // Add default columns first
+    defaultCols.forEach(col => {
+      if (col && col.key) {
+        columnMap.set(col.key, col);
+      }
+    });
+    
+    // Add user columns, but only if they don't already exist (user columns override defaults)
+    userCols.forEach(col => {
+      if (col && col.key) {
+        columnMap.set(col.key, col);
+      }
+    });
+    
+    // Convert map back to array, preserving order: defaults first, then user columns
+    const allColumns = [
+      ...defaultCols.filter(col => columnMap.has(col.key)),
+      ...userCols.filter(col => !defaultCols.some(dc => dc.key === col.key))
+    ];
+    
     return {
-      defaultColumns: this.config.defaultColumns,
-      userColumns: userConfig.userColumns,
-      allColumns: [...this.config.defaultColumns, ...userConfig.userColumns],
+      defaultColumns: defaultCols,
+      userColumns: userCols,
+      allColumns: allColumns,
       allPossibleFields: this.config.allPossibleFields
     };
   }

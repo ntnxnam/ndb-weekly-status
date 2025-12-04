@@ -74,12 +74,13 @@
     },
     {
       "key": "ndb_2_11_wishlist",
-      "label": "2.11 Wishlist",
+      "label": "Wishlist",
       "type": "labelCheck",
       "jiraField": "labels",
-      "labelToCheck": "ndb-2.11-wishlist",
+      "labelPattern": "fixVersion",
       "isDefault": true,
-      "isEditable": false
+      "isEditable": false,
+      "note": "Dynamically checks for wishlist label based on fix version (e.g., NDB-2.11 -> ndb-2.11-wishlist)"
     },
     {
       "key": "cg",
@@ -153,6 +154,7 @@
     "customfield_10048",
     "customfield_10049",
     "customfield_10050",
+    "customfield_23073",
     "customfield_35863"
   ],
   "jira": {
