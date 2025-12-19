@@ -706,7 +706,87 @@ app.get('/api/refresh-columns', async (req, res) => {
     console.log(`📥 [API] /api/refresh-columns - Using user-provided token`);
     
     const data = await jiraClient.refreshColumns(jql, userToken);
-    const formattedIssues = jiraClient.formatIssues(data.issues, false);
+    
+    // Fetch remote links for CG/PG Readiness and ALL Confluence links (same as /api/fetch-all-data)
+    console.log(`🔗 [API] /api/refresh-columns - Fetching remote links for ${data.issues.length} issues...`);
+    const remoteLinksResult = await fetchRemoteLinksForIssues(data.issues, userToken);
+    const remoteLinksMap = remoteLinksResult.mentionedIn || {};
+    const allConfluenceLinksMap = remoteLinksResult.allConfluence || {};
+    
+    // Enrich issues with CG/PG Readiness links from remote links
+    console.log(`🔍 [API] /api/refresh-columns - Identifying CG/PG Readiness links...`);
+    
+    // Get Confluence token from request header, or use Jira PAT token, or fall back to .env
+    const confluenceTokenFromHeader = req.headers['x-confluence-token'];
+    const confluenceToken = confluenceTokenFromHeader || userToken || process.env.CONFLUENCE_API_TOKEN || confluenceClient.token;
+    
+    const enrichedIssues = await Promise.all(data.issues.map(async (issue) => {
+      const remoteLinks = remoteLinksMap[issue.key] || [];
+      const allConfluenceLinks = allConfluenceLinksMap[issue.key] || [];
+      
+      // Filter CG and PG Readiness links based on extracted titles from URLs
+      const cgLinks = allConfluenceLinks
+        .filter(link => {
+          const title = (link.title || '').toLowerCase();
+          const url = (link.url || '').toLowerCase();
+          return title.includes('cg readiness') || title.includes('cg checklist') || 
+                 url.includes('cg+readiness') || url.includes('cg-readiness') ||
+                 url.includes('cg+checklist') || url.includes('cg-checklist');
+        })
+        .map(link => {
+          const extractedTitle = extractTitleFromUrl(link.url);
+          return { 
+            url: link.url, 
+            title: link.title && link.title !== 'Page' ? link.title : (extractedTitle || 'CG Readiness')
+          };
+        });
+      
+      const pgLinks = allConfluenceLinks
+        .filter(link => {
+          const title = (link.title || '').toLowerCase();
+          const url = (link.url || '').toLowerCase();
+          return title.includes('pg readiness') || title.includes('pg checklist') ||
+                 url.includes('pg+readiness') || url.includes('pg-readiness') ||
+                 url.includes('pg+checklist') || url.includes('pg-checklist');
+        })
+        .map(link => {
+          const extractedTitle = extractTitleFromUrl(link.url);
+          return { 
+            url: link.url, 
+            title: link.title && link.title !== 'Page' ? link.title : (extractedTitle || 'PG Readiness')
+          };
+        });
+      
+      // If no CG/PG links found, show all Confluence links as fallback
+      if (cgLinks.length === 0 && pgLinks.length === 0 && allConfluenceLinks.length > 0) {
+        issue._readinessLinks = {
+          cg: allConfluenceLinks.map((link, idx) => {
+            const extractedTitle = extractTitleFromUrl(link.url);
+            return { 
+              url: link.url, 
+              title: link.title && link.title !== 'Page' ? link.title : (extractedTitle || `Link ${idx + 1}`)
+            };
+          }),
+          pg: allConfluenceLinks.map((link, idx) => {
+            const extractedTitle = extractTitleFromUrl(link.url);
+            return { 
+              url: link.url, 
+              title: link.title && link.title !== 'Page' ? link.title : (extractedTitle || `Link ${idx + 1}`)
+            };
+          })
+        };
+      } else {
+        issue._readinessLinks = {
+          cg: cgLinks.length > 0 ? cgLinks : null,
+          pg: pgLinks.length > 0 ? pgLinks : null
+        };
+      }
+      
+      issue._allConfluenceLinks = allConfluenceLinks;
+      return issue;
+    }));
+    
+    const formattedIssues = jiraClient.formatIssues(enrichedIssues, true);
     
     const duration = Date.now() - startTime;
     console.log(`✅ [API] /api/refresh-columns - Success in ${duration}ms - ${formattedIssues.length} issues`);
