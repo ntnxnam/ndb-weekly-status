@@ -1,216 +1,182 @@
-# NDB Weekly Status
+# NDB Weekly Status Application
 
-A simple web application that connects to Jira and displays issue data based on configurable queries. Perfect for weekly status reports and project dashboards.
+A web application for fetching and displaying Jira issue data for weekly status reports. The application connects to Jira and Confluence APIs to fetch issue data, extract CG/PG Readiness links, and display them in a clean, organized table format.
 
 ## Features
 
-- 🔗 **Jira Integration**: Connect to any Jira instance using API tokens
-- 📊 **Custom Queries**: Use JQL (Jira Query Language) to filter issues
-- 🎨 **Modern UI**: Clean, responsive interface with real-time data
-- ⚡ **Fast & Lightweight**: No Docker, no complications - just Node.js
-- 🔄 **Auto-refresh**: Automatically updates every 5 minutes
-- 📱 **Mobile Friendly**: Responsive design works on all devices
+- ✅ **Single JQL Query Field**: Consolidated query input for JQL, filter IDs, or feature keys
+- ✅ **Dynamic Status Tiles**: Automatically generated from actual Jira statuses with accurate counts
+- ✅ **FEAT/INITIATIVE Filtering**: Main table shows only Feature or Initiative tickets
+- ✅ **CG/PG Readiness Links**: Automatically extracts and displays CG/PG Readiness links from remote links
+- ✅ **Custom Field Names**: Displays actual field names (not raw IDs like "Customfield 23073")
+- ✅ **Related Ticket Counts**: Shows counts for Outstanding Tasks, Bugs, Tests, and Other Tickets with JQL hyperlinks
+- ✅ **No Pagination**: All tickets displayed at once
+- ✅ **Confluence Integration**: Fetches page titles and labels for better CG/PG Readiness identification
 
-## Quick Start
+## Prerequisites
 
-### 1. Install Dependencies
+- Node.js (v14 or higher)
+- Jira API token (Bearer token)
+- Confluence API token (for CG/PG Readiness link identification)
+- Access to Jira and Confluence instances
 
+## Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd ndb-weekly-status
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 2. Configure Jira Connection
-
-#### Option A: Interactive Setup (Recommended)
-Run the interactive setup script:
-
-```bash
-npm run setup
-```
-
-This will guide you through entering:
-- Your Jira URL
-- Your email address
-- Your API token
-- Your JQL query (defaults to `filter = 'NDB-StatusUpdates'`)
-- Server port (defaults to 3000)
-
-#### Option B: Manual Configuration
-Copy the example config and create your private key file:
-
-```bash
-cp config.example.json config.json
-cp jira-key-private.example.txt jira-key-private.txt
-```
-
-Then edit the files with your Jira details:
-
-**1. Edit `config.json`:**
-```json
-{
-  "jira": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "username": "your-email@example.com",
-    "apiToken": "your-api-token-here",
-    "jql": "filter = 'NDB-StatusUpdates'"
-  },
-  "server": {
-    "port": 3000
-  }
-}
-```
-
-**2. Edit `jira-key-private.txt`:**
-```
-YOUR_ACTUAL_JIRA_API_TOKEN_HERE
-```
-
-**⚠️ Important**: Both `config.json` and `jira-key-private.txt` files are ignored by Git to protect your credentials.
-
-#### Option C: Environment Variables
-Create a `.env` file in the project root:
-
+3. Configure environment variables:
 ```bash
 cp env.example .env
 ```
 
-Then edit `.env` with your Jira details:
-
-```env
-JIRA_BASE_URL=https://your-domain.atlassian.net
-JIRA_USERNAME=your-email@example.com
-JIRA_API_TOKEN=your-api-token-here
-JIRA_JQL=filter = 'NDB-StatusUpdates'
-PORT=3000
+Edit `.env` and add your tokens:
+```
+PORT=7842
+JIRA_API_TOKEN=your_jira_token_here
+CONFLUENCE_API_TOKEN=your_confluence_token_here
 ```
 
-### 3. Get Your Jira API Token
+4. Configure Jira settings in `config.json`:
+```json
+{
+  "jira": {
+    "baseUrl": "https://your-jira-instance.atlassian.net"
+  },
+  "server": {
+    "port": 7842
+  }
+}
+```
 
-1. Go to [Atlassian Account Settings](https://id.atlassian.com/manage-profile/security/api-tokens)
-2. Click "Create API token"
-3. Give it a label (e.g., "NDB Weekly Status")
-4. Copy the generated token
-5. Use this token as your `JIRA_API_TOKEN`
+## Usage
 
-### 4. Start the Application
-
+1. Start the server:
 ```bash
 npm start
 ```
 
-For development with auto-restart:
-
+Or for development with auto-reload:
 ```bash
 npm run dev
 ```
 
-### 5. Open in Browser
-
-Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-### Default Query
-The application will use the JQL query specified in your configuration to fetch issues.
-
-### Custom Queries
-You can enter custom JQL queries in the web interface to filter issues differently. Some examples:
-
-- **All issues assigned to you**: `assignee = currentUser()`
-- **Issues updated this week**: `updated >= -7d`
-- **High priority issues**: `priority = High`
-- **Issues in specific sprint**: `sprint in openSprints()`
-
-### API Endpoints
-
-- `GET /` - Main dashboard
-- `GET /api/issues?jql=...` - Fetch issues (optional custom JQL)
-- `GET /api/issue/:key` - Get specific issue details
-- `GET /api/health` - Health check
-
-## Configuration Options
-
-### Jira Settings
-
-| Setting | Description | Example |
-|---------|-------------|---------|
-| `baseUrl` | Your Jira instance URL | `https://company.atlassian.net` |
-| `username` | Your Jira email address | `user@company.com` |
-| `apiToken` | Your Jira API token | `ATATT3xFfGF0...` |
-| `jql` | Default JQL query | `project = 'PROJ' AND status != Done` |
-
-### Server Settings
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `port` | Server port | `3000` |
-
-## Troubleshooting
-
-### Common Issues
-
-**"Configuration not found"**
-- Make sure you have either a `.env` file or `config.json` file
-- Check that your configuration file is valid JSON
-
-**"Failed to fetch Jira data"**
-- Verify your Jira URL is correct
-- Check that your API token is valid
-- Ensure your JQL query is syntactically correct
-- Make sure you have permission to access the specified project
-
-**"Authentication failed"**
-- Double-check your username and API token
-- Ensure your API token hasn't expired
-- Verify you're using the correct email address
-
-### Debug Mode
-
-Set `NODE_ENV=development` to see detailed error messages:
-
-```bash
-NODE_ENV=development npm start
+2. Open your browser and navigate to:
+```
+http://localhost:7842
 ```
 
-## Development
+3. Authenticate:
+   - Click the "Authenticate" button
+   - Enter your Jira API token
+   - Click "Save"
 
-### Project Structure
+4. Fetch data:
+   - Enter a JQL query, filter ID, or feature key in the query field
+   - Click "Fetch Data"
+   - View status tiles and data table
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+The test suite verifies:
+- Server health
+- Environment variables
+- Configuration loading
+- Field names API
+- Fetch All Data API
+- CG/PG Readiness identification
+
+## Project Structure
 
 ```
 ndb-weekly-status/
-├── server.js                      # Express server
-├── jira-client.js                 # Jira API client
-├── setup-config.js                # Interactive setup script
-├── config.example.json            # Example configuration (safe to commit)
-├── config.json                    # Your configuration (ignored by Git)
-├── jira-key-private.example.txt   # Example API key file (safe to commit)
-├── jira-key-private.txt           # Your API key (ignored by Git)
-├── .env                           # Environment variables (ignored by Git)
-├── package.json                   # Dependencies
+├── server.js                 # Express server and API endpoints
+├── jira-client-clean.js      # Jira API client and data formatting
+├── confluence-client.js      # Confluence API client
+├── config.js                 # Configuration management
 ├── public/
-│   └── index.html                 # Web interface
-└── README.md                      # This file
+│   └── index.html            # Frontend interface
+├── tests/
+│   └── test-suite.js         # Test suite
+├── backend-default-config.json
+├── user-column-config.json
+├── config.json
+├── .env
+└── package.json
 ```
 
-### Adding Features
+## API Endpoints
 
-The codebase is intentionally simple and modular:
+- `GET /api/health` - Server health check
+- `GET /api/fetch-all-data?jql=<query>` - Fetch all issues matching JQL
+- `GET /api/field-names` - Get Jira field name mappings
+- `GET /api/table-config` - Get table configuration
+- `GET /api/refresh-columns?jql=<query>` - Refresh columns with data
 
-- **Backend**: Add new routes in `server.js`
-- **Jira Integration**: Extend `jira-client.js`
-- **Frontend**: Modify `public/index.html`
+## Configuration
+
+### Port Configuration
+Port can be configured via:
+1. Environment variable: `PORT` in `.env`
+2. `config.json`: `server.port`
+3. Default: `7842`
+
+### Token Configuration
+Tokens are loaded from `.env`:
+- `JIRA_API_TOKEN`: Jira API Bearer token
+- `CONFLUENCE_API_TOKEN`: Confluence API Bearer token
+
+## Features in Detail
+
+### Status Tiles
+- Dynamically generated from actual Jira statuses
+- Shows accurate counts for each status
+- First tile shows "TOTAL TICKETS"
+- Compact design (100px min width, 8px gap)
+- Responsive (3 columns on mobile)
+
+### CG/PG Readiness Links
+- Automatically fetched from Jira remote links
+- Confluence page titles fetched for identification
+- Labels checked for better matching
+- Displayed in "CG Completion" and "PG Completion" columns
+
+### Related Ticket Counts
+- Outstanding Tasks: `issuetype IN (Task, Story, Sub-task)`
+- Bugs: `issuetype = Bug`
+- Tests: `issuetype = Test`
+- Other Tickets: `issuetype NOT IN (Task, Story, Sub-task, Bug, Test, Feature, Initiative)`
+- Each count is clickable and generates JQL query
+
+## Requirements
+
+See `REQUIREMENTS.md` for complete requirements documentation.
+
+## Test Plan
+
+See `TEST_PLAN.md` for detailed test cases and execution plan.
+
+## Implementation
+
+See `IMPLEMENTATION_PROMPT.md` for implementation details and current state.
 
 ## License
 
-MIT License - feel free to use this project for your team's weekly status reports!
+MIT
 
-## Contributing
+## Author
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## Support
-
-If you encounter any issues or have questions, please open an issue on GitHub.
+ntnxnam

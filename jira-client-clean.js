@@ -39,8 +39,23 @@ class JiraClient {
       console.log('🔄 [fetchAllData] Base URL:', this.baseUrl);
       console.log('🔄 [fetchAllData] Using token:', userToken ? 'User-provided' : 'Config');
       
-      let fields = this.configManager.config.allPossibleFields;
-      if (!fields || fields.length === 0) {
+      let fields = this.configManager.config.allPossibleFields || [];
+      
+      // Also include fields from user columns to ensure custom fields are fetched
+      const tableConfig = this.configManager.getTableConfig();
+      if (tableConfig.allColumns && tableConfig.allColumns.length > 0) {
+        tableConfig.allColumns.forEach(column => {
+          if (column.jiraField) {
+            // Extract base field name (e.g., 'status.name' -> 'status', 'customfield_23073' -> 'customfield_23073')
+            const baseField = column.jiraField.split('.')[0];
+            if (!fields.includes(baseField)) {
+              fields.push(baseField);
+            }
+          }
+        });
+      }
+      
+      if (fields.length === 0) {
         console.warn('⚠️ [fetchAllData] No fields configured, using defaults');
         const backendConfig = this.configManager.getBackendConfig();
         fields = backendConfig.allPossibleFields || ['key', 'summary', 'status'];
@@ -253,7 +268,7 @@ class JiraClient {
           `${cleanBaseUrl}/rest/api/2/search`,
           {
             jql: jql,
-            maxResults: 100,
+            maxResults: 1000, // Increased from 100 to fetch more issues
             fields: fields
           },
           {
@@ -371,7 +386,7 @@ class JiraClient {
         searchUrl,
         {
           jql: jql,
-          maxResults: 100,
+          maxResults: 1000, // Increased from 100 to fetch more issues
           fields: fields
         },
         {
@@ -494,27 +509,203 @@ class JiraClient {
       return [];
     }
     
-    // Use backend configuration for column ordering
-    const backendConfig = this.configManager.getBackendConfig();
-    const columns = backendConfig.defaultColumns || [];
-    
-    const cleanBaseUrl = this.baseUrl.replace(/\/$/, '');
-    return issues.map(issue => {
+    try {
+      // Use table config to get all columns (default + user columns)
+      const tableConfig = this.configManager.getTableConfig();
+      const columns = tableConfig.allColumns || tableConfig.defaultColumns || [];
+      
+      if (!columns || columns.length === 0) {
+        console.warn('⚠️ [formatIssues] No columns found in table config. Using minimal defaults.');
+        // Fallback to basic columns if config is empty
+        return issues.map(issue => ({
+          url: `${this.baseUrl.replace(/\/$/, '')}/browse/${issue.key}`,
+          key: issue.key || '',
+          summary: issue.fields?.summary || '',
+          status: issue.fields?.status?.name || 'Unknown'
+        }));
+      }
+      
+      console.log(`📊 [formatIssues] Processing ${issues.length} issues with ${columns.length} columns (${tableConfig.defaultColumns?.length || 0} default + ${tableConfig.userColumns?.length || 0} user)`);
+      
+      const cleanBaseUrl = this.baseUrl.replace(/\/$/, '');
+      const firstIssueKey = issues.length > 0 ? issues[0].key : null;
+      
+      return issues.map((issue, index) => {
       const formattedIssue = {
         url: `${cleanBaseUrl}/browse/${issue.key}`,
-        key: issue.key || ''
+        key: issue.key || '',
+        // Store all Confluence links for display
+        allConfluenceLinks: issue._allConfluenceLinks || []
       };
+      
+      // Extract CG Readiness and PG Readiness from issue fields
+      const cgReadinessLink = this.extractReadinessLink(issue, 'CG Readiness');
+      const pgReadinessLink = this.extractReadinessLink(issue, 'PG Readiness');
       
       // Process columns in the order defined in backend configuration
       columns.forEach(column => {
         if (column && column.jiraField && column.key) {
           const fieldValue = this.getFieldValue(issue, column.jiraField);
           
+          // Debug logging for custom fields and resolution (only log first issue to avoid spam)
+          if (index === 0 && column.jiraField && (column.jiraField.startsWith('customfield_') || column.key === 'resolution' || column.key === 'customfield_23073' || column.key === 'customfield_23560')) {
+            try {
+              const formattedValue = column.jiraField === 'customfield_23073' || column.key === 'customfield_23073' 
+                ? fieldValue 
+                : (column.jiraField === 'customfield_23560' || column.key === 'customfield_23560'
+                  ? (fieldValue && typeof fieldValue === 'object' ? (fieldValue.value || fieldValue.name || JSON.stringify(fieldValue)) : fieldValue)
+                  : this.formatFieldValue(fieldValue, column.type));
+              
+              console.log(`🔍 [formatIssues] Processing ${column.key} (${column.jiraField}):`, {
+                hasValue: fieldValue !== null && fieldValue !== undefined,
+                valueType: typeof fieldValue,
+                rawValue: typeof fieldValue === 'string' ? fieldValue.substring(0, 50) : (typeof fieldValue === 'object' && fieldValue !== null ? JSON.stringify(fieldValue).substring(0, 100) : fieldValue),
+                formattedValue: formattedValue
+              });
+            } catch (logError) {
+              // Ignore logging errors
+            }
+          }
+          
           // Special handling for customfield_23073 - store raw value for summarization
           if (column.jiraField === 'customfield_23073' || column.key === 'customfield_23073') {
             // Store the raw value - will be summarized on the frontend
             formattedIssue[column.key] = fieldValue;
             formattedIssue[column.key + '_raw'] = fieldValue; // Keep raw for reference
+          }
+          // Special handling for customfield_23560 (Risk Indicator) - extract value from option object
+          else if (column.jiraField === 'customfield_23560' || column.key === 'customfield_23560') {
+            // Risk Indicator is an option field, extract the value
+            if (fieldValue && typeof fieldValue === 'object') {
+              formattedIssue[column.key] = fieldValue.value || fieldValue.name || fieldValue.toString();
+            } else if (fieldValue !== null && fieldValue !== undefined) {
+              formattedIssue[column.key] = String(fieldValue);
+            } else {
+              formattedIssue[column.key] = ''; // Empty if no value
+            }
+          }
+          // Special handling for resolution - show "Unresolved" when null/empty
+          else if (column.key === 'resolution' || (column.jiraField && (column.jiraField === 'resolution' || column.jiraField.startsWith('resolution.')))) {
+            if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
+              formattedIssue[column.key] = 'Unresolved';
+            } else {
+              formattedIssue[column.key] = this.formatFieldValue(fieldValue, column.type);
+            }
+          }
+          // Special handling for CG/PG Completion - use extracted Readiness links from "mentioned in"
+          else if (column.type === 'confluence') {
+            if (column.key === 'cg' || column.jiraField === 'customfield_10000') {
+              // Use CG Readiness link from remote links (stored in issue._readinessLinks), then from fields search
+              // Note: customfield_10000 is just a column identifier, not a data source
+              // #region agent log
+              const fs = require('fs');
+              const path = require('path');
+              try {
+                const logPath = path.join(__dirname, '.cursor', 'debug.log');
+                const logEntry = {
+                  location: 'jira-client-clean.js:600',
+                  message: 'formatIssues CG column',
+                  data: {
+                    issueKey: issue.key,
+                    hasReadinessLinks: !!issue._readinessLinks,
+                    _readinessLinksCg: issue._readinessLinks?.cg,
+                    _readinessLinksPg: issue._readinessLinks?.pg,
+                    cgReadinessLink,
+                    readinessLink: issue._readinessLinks?.cg || cgReadinessLink
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'C'
+                };
+                fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
+              } catch (err) {}
+              // #endregion
+              // Display all Confluence links found (can be array of objects, array of strings, or string)
+              const readinessLinks = issue._readinessLinks?.cg;
+              if (Array.isArray(readinessLinks) && readinessLinks.length > 0) {
+                // Check if it's an array of objects with url and title
+                if (readinessLinks[0] && typeof readinessLinks[0] === 'object' && readinessLinks[0].url) {
+                  // Array of objects: format as "Title (url), Title2 (url2)"
+                  formattedIssue[column.key] = readinessLinks.map(link => link.url).join(', ');
+                  // Store the full link objects for frontend display
+                  formattedIssue[column.key + '_links'] = readinessLinks;
+                } else {
+                  // Array of strings: join with comma
+                  formattedIssue[column.key] = readinessLinks.join(', ');
+                }
+              } else if (readinessLinks) {
+                // Single link or comma-separated string
+                formattedIssue[column.key] = readinessLinks;
+              } else {
+                formattedIssue[column.key] = 'No link';
+              }
+              // #region agent log
+              try {
+                const logPath = path.join(__dirname, '.cursor', 'debug.log');
+                const logEntry = {
+                  location: 'jira-client-clean.js:601',
+                  message: 'formatIssues CG column FINAL',
+                  data: {
+                    issueKey: issue.key,
+                    formattedIssueCg: formattedIssue[column.key],
+                    readinessLinks: readinessLinks
+                  },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'C'
+                };
+                fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
+              } catch (err) {}
+              // #endregion
+              
+              // Debug logging for first issue
+              if (index === 0) {
+                console.log(`🔍 [formatIssues] CG Completion for ${issue.key}:`, {
+                  readinessLinks: readinessLinks,
+                  cgReadinessLink: cgReadinessLink,
+                  finalValue: formattedIssue[column.key],
+                  hasReadinessLinks: !!issue._readinessLinks,
+                  _readinessLinksCg: issue._readinessLinks?.cg
+                });
+              }
+            } else if (column.key === 'pg' || column.jiraField === 'customfield_10001') {
+              // Use PG Readiness link from remote links (stored in issue._readinessLinks), then from fields search
+              // Note: customfield_10001 is just a column identifier, not a data source
+              // Display all Confluence links found (can be array of objects, array of strings, or string)
+              const readinessLinks = issue._readinessLinks?.pg;
+              if (Array.isArray(readinessLinks) && readinessLinks.length > 0) {
+                // Check if it's an array of objects with url and title
+                if (readinessLinks[0] && typeof readinessLinks[0] === 'object' && readinessLinks[0].url) {
+                  // Array of objects: format as "Title (url), Title2 (url2)"
+                  formattedIssue[column.key] = readinessLinks.map(link => link.url).join(', ');
+                  // Store the full link objects for frontend display
+                  formattedIssue[column.key + '_links'] = readinessLinks;
+                } else {
+                  // Array of strings: join with comma
+                  formattedIssue[column.key] = readinessLinks.join(', ');
+                }
+              } else if (readinessLinks) {
+                // Single link or comma-separated string
+                formattedIssue[column.key] = readinessLinks;
+              } else {
+                formattedIssue[column.key] = 'No link';
+              }
+              
+              // Debug logging for first issue
+              if (index === 0) {
+                console.log(`🔍 [formatIssues] PG Completion for ${issue.key}:`, {
+                  readinessLinks: readinessLinks,
+                  pgReadinessLink: pgReadinessLink,
+                  finalValue: formattedIssue[column.key],
+                  hasReadinessLinks: !!issue._readinessLinks,
+                  _readinessLinksPg: issue._readinessLinks?.pg
+                });
+              }
+            } else {
+              formattedIssue[column.key] = this.formatFieldValue(fieldValue, column.type);
+            }
           }
           // Special handling for labelCheck type
           else if (column.type === 'labelCheck') {
@@ -540,6 +731,18 @@ class JiraClient {
       
       return formattedIssue;
     });
+    } catch (error) {
+      console.error('❌ [formatIssues] Error formatting issues:', error);
+      console.error('❌ [formatIssues] Error stack:', error.stack);
+      // Return minimal formatted issues on error
+      return issues.map(issue => ({
+        url: `${this.baseUrl.replace(/\/$/, '')}/browse/${issue.key}`,
+        key: issue.key || '',
+        summary: issue.fields?.summary || '',
+        status: issue.fields?.status?.name || 'Unknown',
+        error: 'Formatting error'
+      }));
+    }
   }
 
   getFieldValue(issue, jiraField) {
@@ -620,6 +823,83 @@ class JiraClient {
     }
     
     return value;
+  }
+
+  // Extract CG Readiness or PG Readiness link from "mentioned in" field
+  // This searches through issue fields for Confluence links matching CG/PG Readiness
+  // Note: Remote links API could be used for "mentioned in" but requires async calls
+  // For now, we search through all fields synchronously
+  extractReadinessLink(issue, type) {
+    if (!issue || !issue.fields) return null;
+    
+    const searchTerm = type === 'CG Readiness' ? 'cg readiness' : 'pg readiness';
+    
+    // Search through all fields for arrays or objects containing Confluence links
+    for (const fieldId in issue.fields) {
+      const fieldValue = issue.fields[fieldId];
+      
+      // Check if it's an array (like "mentioned in" might be stored)
+      if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+        for (const item of fieldValue) {
+          if (typeof item === 'object' && item !== null) {
+            // Extract URL from various possible formats
+            const url = item.url || item.value || item.href || item.uri || item.self || '';
+            const title = item.title || item.name || item.displayName || item.text || '';
+            const objStr = JSON.stringify(item).toLowerCase();
+            
+            // Check if it's a Confluence link (not Jira link)
+            const isConfluenceLink = (url.includes('confluence') || url.includes('wiki')) && 
+                                   !url.includes('jira.nutanix.com') &&
+                                   !url.includes('/rest/api/') &&
+                                   !url.includes('atlassian.com/s/en_GB'); // Exclude Atlassian CDN URLs
+            
+            // Check if it matches the search term
+            const matchesType = title.toLowerCase().includes(searchTerm) || 
+                              objStr.includes(searchTerm) ||
+                              url.toLowerCase().includes(searchTerm.replace(' ', '-')) ||
+                              url.toLowerCase().includes(searchTerm.replace(' ', '')) ||
+                              url.toLowerCase().includes(searchTerm.replace(' ', '_'));
+            
+            if (isConfluenceLink && matchesType) {
+              // Return the URL
+              if (url && url.startsWith('http')) {
+                console.log(`✅ [extractReadinessLink] Found ${type} link: ${url}`);
+                return url;
+              }
+              // Try to extract URL from the object
+              if (item.url && item.url.startsWith('http')) {
+                console.log(`✅ [extractReadinessLink] Found ${type} link: ${item.url}`);
+                return item.url;
+              }
+              if (item.value && typeof item.value === 'string' && item.value.startsWith('http')) {
+                console.log(`✅ [extractReadinessLink] Found ${type} link: ${item.value}`);
+                return item.value;
+              }
+            }
+          }
+        }
+      }
+      // Also check if it's a single object that might contain a link
+      else if (typeof fieldValue === 'object' && fieldValue !== null && !Array.isArray(fieldValue)) {
+        const url = fieldValue.url || fieldValue.value || fieldValue.href || '';
+        const title = (fieldValue.title || fieldValue.name || fieldValue.displayName || '').toLowerCase();
+        const objStr = JSON.stringify(fieldValue).toLowerCase();
+        
+        const isConfluenceLink = (url.includes('confluence') || url.includes('wiki')) && 
+                               !url.includes('jira.nutanix.com') &&
+                               !url.includes('/rest/api/');
+        const matchesType = title.includes(searchTerm) || 
+                          objStr.includes(searchTerm) ||
+                          url.toLowerCase().includes(searchTerm.replace(' ', '-'));
+        
+        if (isConfluenceLink && matchesType && url.startsWith('http')) {
+          console.log(`✅ [extractReadinessLink] Found ${type} link (single object): ${url}`);
+          return url;
+        }
+      }
+    }
+    
+    return null;
   }
 
   // Extract URL from Atlassian Document Format (ADF) content
@@ -764,6 +1044,7 @@ class JiraClient {
     return 'No';
   }
 
+
   getTableConfig() {
     return this.configManager.getTableConfig();
   }
@@ -807,7 +1088,7 @@ class JiraClient {
     // HTTP status code errors
     if (error.response?.status) {
       const statusMessages = {
-        401: 'Authentication failed. Please check your PAT token in jira-key-private.txt',
+        401: 'Authentication failed. Please check your JIRA_API_TOKEN in .env file',
         403: 'Access forbidden. Please check your Jira permissions.',
         404: 'Resource not found. Please check your Jira URL and filter ID.',
         500: 'Jira server error. Please try again later.',

@@ -84,7 +84,7 @@
     },
     {
       "key": "cg",
-      "label": "CG Page",
+      "label": "CG Completion",
       "type": "confluence",
       "jiraField": "customfield_10000",
       "isDefault": true,
@@ -93,7 +93,7 @@
     },
     {
       "key": "pg",
-      "label": "PG Page",
+      "label": "PG Completion",
       "type": "confluence",
       "jiraField": "customfield_10001",
       "isDefault": true,
@@ -155,6 +155,7 @@
     "customfield_10049",
     "customfield_10050",
     "customfield_23073",
+    "customfield_23560",
     "customfield_35863"
   ],
   "jira": {

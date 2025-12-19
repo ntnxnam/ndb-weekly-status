@@ -1,6 +1,13 @@
 {
   "userColumns": [
     {
+      "key": "key",
+      "label": "Key",
+      "type": "text",
+      "jiraField": "key",
+      "active": true
+    },
+    {
       "key": "assignee",
       "label": "Assignee",
       "type": "text",
@@ -22,6 +29,13 @@
       "active": true
     },
     {
+      "key": "components",
+      "label": "Components",
+      "type": "text",
+      "jiraField": "components",
+      "active": true
+    },
+    {
       "key": "priority",
       "label": "Priority",
       "type": "text",
@@ -32,7 +46,7 @@
       "key": "resolution",
       "label": "Resolution",
       "type": "text",
-      "jiraField": "resolution",
+      "jiraField": "resolution.name",
       "active": true
     },
     {

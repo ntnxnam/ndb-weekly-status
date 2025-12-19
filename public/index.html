@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NDB Weekly Status</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
             margin: 0;
@@ -257,30 +258,33 @@
         /* Stats - Compact */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
         }
 
         .stat-card {
             background: #ffffff;
             border: 1px solid #e0e0e0;
-            padding: 12px 16px;
+            padding: 6px 10px;
             text-align: center;
-            border-radius: 6px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .stat-number {
-            font-size: 24px;
+            font-size: 16px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            line-height: 1.2;
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
             color: #666;
+            line-height: 1.2;
         }
 
         /* Table - Minimal, Lean Design */
@@ -290,6 +294,7 @@
             border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: block; /* Always show container */
         }
 
         .table-wrapper {
@@ -548,7 +553,20 @@
             }
 
             .stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 6px 10px;
+            }
+            
+            .stat-number {
+                font-size: 16px;
+            }
+            
+            .stat-label {
+                font-size: 9px;
             }
 
             .table {
@@ -848,125 +866,23 @@
 
         <!-- Content -->
         <div class="content">
-            <!-- Authentication Modal -->
-            <div id="authModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>🔐 Authenticate with Jira</h2>
-                        <span class="close" onclick="closeAuthModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <p>Enter your Jira Bearer Token (PAT) to authenticate. This will be stored locally in your browser and used for all API calls.</p>
-                        <p><strong>Note:</strong> Your company requires Bearer token authentication. The token will be validated before saving.</p>
-                        <p><strong>How to get your token:</strong> Go to Jira → Profile → Security → API tokens → Create token</p>
-                        <div class="form-group">
-                            <label for="authToken">Bearer Token (PAT):</label>
-                            <input type="password" id="authToken" class="form-input" placeholder="Enter your Jira API token">
-                        </div>
-                        <div class="form-group">
-                            <label for="authEmail">Email (optional, for reference):</label>
-                            <input type="email" id="authEmail" class="form-input" placeholder="your.email@nutanix.com">
-                        </div>
-                        <div id="authError" class="error" style="display: none; margin-top: 10px;"></div>
-                        <div class="modal-actions">
-                            <button class="btn primary" onclick="authenticateToken()">Authenticate</button>
-                            <button class="btn" onclick="closeAuthModal()">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Confluence Summary Modal -->
-            <div id="confluenceModal" class="modal" style="display: none;">
-                <div class="modal-content" style="max-width: 800px;">
-                    <div class="modal-header">
-                        <h2 id="confluenceModalTitle">📄 Confluence Summary</h2>
-                        <span class="close" onclick="closeConfluenceModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div id="confluenceModalContent">
-                            <div style="text-align: center; padding: 20px;">
-                                <div class="loading">Loading summary...</div>
-                            </div>
-                        </div>
-                        <div class="modal-actions">
-                            <a id="confluenceModalLink" href="#" target="_blank" class="btn" style="background: #3b82f6; color: white; text-decoration: none;">Open in Confluence</a>
-                            <button class="btn" onclick="closeConfluenceModal()">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature/Initiative Selector -->
-            <div class="feature-selector-section" style="background: #f8f8f8; border: 1px solid #e5e5e5; border-radius: 4px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">🎯 Feature/Initiative Tracker</h3>
-                
-                <!-- Manual Input -->
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-                    <input type="text" id="featureKey" class="jql-input" placeholder="Enter Feature Key (e.g., ERA-21110)" style="flex: 1; min-width: 200px;">
-                    <button class="btn primary" onclick="fetchFeatureTickets()">🔍 Fetch All Related Tickets</button>
-                    <button class="btn" onclick="clearFeatureSearch()">Clear</button>
-                </div>
-                
-                <!-- Features List (Clickable) -->
-                <div id="featuresListContainer" style="display: none;">
-                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #666;">Click a feature to drill down:</div>
-                    <div id="featuresList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-                </div>
-                
-                <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                    This will find all tickets related to the feature including: direct matches, parent links, FEAT IDs, portfolio children, epics, and subtasks.
-                </p>
-            </div>
 
             <!-- Controls -->
             <div class="controls">
-                <input type="text" id="customJql" class="jql-input" placeholder="Enter custom JQL query (optional)" value="filter = 165194">
-                <button id="authButton" class="btn" onclick="showAuthModal()" style="background: #f59e0b; color: white;">
-                    🔐 Authenticate
+                <input type="text" id="customJql" class="jql-input" placeholder="Enter JQL query (e.g., filter = 165194)" value="filter = 165194" style="flex: 1; min-width: 300px;">
+                <button class="btn" onclick="testAndAuthenticateJira(this)" style="background: #3b82f6; color: white;" title="Test and authenticate Jira token">
+                    🔐 Test Jira
                 </button>
-                <button class="btn primary" onclick="fetchAllData()">Fetch All Data</button>
+                <button class="btn" onclick="testAndAuthenticateConfluence(this)" style="background: #8b5cf6; color: white;" title="Test and authenticate Confluence token">
+                    🔐 Test Confluence
+                </button>
+                <button class="btn primary" onclick="fetchAllData()">Fetch Data</button>
                 <button class="btn" onclick="refreshColumns()">Refresh Columns</button>
                 <a href="config.html" class="btn">Configure Columns</a>
             </div>
 
-            <!-- Filters -->
-            <div class="filters-section">
-                <h3 class="filters-title">Filters</h3>
-                <div id="filtersContainer" class="filters-container"></div>
-                <div class="filter-actions">
-                    <button class="btn" onclick="applyFilters()">Apply Filters</button>
-                    <button class="btn" onclick="clearFilters()">Clear All</button>
-                </div>
-            </div>
-
-            <!-- BA/BI Dashboard Stats -->
-            <div class="stats" id="stats" style="display: none;">
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <div class="stat-number" id="totalIssues" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">Total Tickets</div>
-                </div>
-                <div class="stat-card" style="background: #f59e0b; color: white;">
-                    <div class="stat-number" id="pendingVerification" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">⚠️ Pending Verification</div>
-                </div>
-                <div class="stat-card" style="background: #3b82f6; color: white;">
-                    <div class="stat-number" id="inProgressIssues" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">In Progress</div>
-                </div>
-                <div class="stat-card" style="background: #10b981; color: white;">
-                    <div class="stat-number" id="doneIssues" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">✅ Verified/Closed</div>
-                </div>
-                <div class="stat-card" style="background: #6b7280; color: white;">
-                    <div class="stat-number" id="todoIssues" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">To Do</div>
-                </div>
-                <div class="stat-card" style="background: #ef4444; color: white;">
-                    <div class="stat-number" id="blockedIssues" style="color: white;">0</div>
-                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">🚫 Blocked</div>
-                </div>
-            </div>
+            <!-- Dynamic Status Stats - will be populated with actual statuses -->
+            <div class="stats" id="stats" style="display: none;"></div>
 
             <!-- Actionable Insights Section -->
             <div id="insightsSection" class="insights-section" style="display: none; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 4px; padding: 20px; margin: 20px 0;">
@@ -1016,17 +932,6 @@
                     <div id="featureDrillDown" class="drilldown-content"></div>
                 </div>
 
-                <!-- Executive Confluence Summary -->
-                <div class="confluence-executive-summary" style="background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px;">
-                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">📋 Executive Summary from Confluence</h3>
-                    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-                        Aggregated summaries from CG and PG Confluence pages. Click "Fetch Summaries" to load all summaries.
-                    </p>
-                    <button class="btn primary" onclick="fetchAndDisplayExecutiveSummaries()" id="fetchSummariesBtn" style="margin-bottom: 20px;">
-                        📥 Fetch All Summaries
-                    </button>
-                    <div id="executiveConfluenceSummaries" class="executive-summaries-content"></div>
-                </div>
             </div>
 
             <!-- Loading State -->
@@ -1044,16 +949,10 @@
                 <!-- Table Controls -->
                 <div class="table-controls" style="display: none; padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;" id="tableControls">
                     <div class="table-info" style="font-size: 12px; color: #666;">
-                        <span id="tableInfo">Showing 0 of 0 tickets</span>
+                        <span id="tableInfo">Showing 0 tickets</span>
                     </div>
                     <div class="table-actions" style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="tableSearch" placeholder="Search table..." style="padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; width: 200px;" onkeyup="searchTable()">
-                        <select id="pageSize" onchange="changePageSize()" style="padding: 6px 12px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px;">
-                            <option value="25">25 per page</option>
-                            <option value="50" selected>50 per page</option>
-                            <option value="100">100 per page</option>
-                            <option value="200">200 per page</option>
-                        </select>
                     </div>
                 </div>
                 
@@ -1065,16 +964,6 @@
                     </table>
                 </div>
                 
-                <!-- Pagination -->
-                <div class="pagination" id="pagination" style="display: none; padding: 12px 16px; background: #fafafa; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="pagination-info" style="font-size: 12px; color: #666;">
-                        <span id="paginationInfo">Page 1 of 1</span>
-                    </div>
-                    <div class="pagination-controls" style="display: flex; gap: 4px;">
-                        <button class="pagination-btn" id="prevPage" onclick="changePage(-1)" disabled style="padding: 6px 12px; border: 1px solid #e0e0e0; background: white; border-radius: 4px; cursor: pointer; font-size: 12px;">← Prev</button>
-                        <button class="pagination-btn" id="nextPage" onclick="changePage(1)" disabled style="padding: 6px 12px; border: 1px solid #e0e0e0; background: white; border-radius: 4px; cursor: pointer; font-size: 12px;">Next →</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -1082,9 +971,17 @@
 
     <script>
         let currentIssues = [];
+        let filteredIssues = [];
+        let allIssues = []; // Store all tickets in background (for count columns)
         let tableConfig = null;
         let userColumns = [];
         let draggedElement = null;
+        let fieldNameMap = {}; // Map field ID to field name
+        let confluencePageTitles = {}; // Map field ID to Confluence page title (for CG/PG)
+        let currentPage = 1; // Current page number for pagination
+        let pageSize = 50; // Number of items per page
+        let totalTicketsFromAPI = 0; // Store total from API response
+        let searchQuery = ''; // Current search query
 
         // Sidebar functionality
         function toggleSidebar() {
@@ -1111,7 +1008,7 @@
             const content = document.querySelector('.content');
             if (content) {
                 Array.from(content.children).forEach(child => {
-                    if (child.id !== 'executiveView' && child.id !== 'authModal') {
+                    if (child.id !== 'executiveView') {
                         child.style.display = '';
                     }
                 });
@@ -1155,116 +1052,6 @@
             // Note: Confluence summaries are fetched on demand via button
         }
 
-        // Fetch and display executive summaries
-        async function fetchAndDisplayExecutiveSummaries() {
-            const btn = document.getElementById('fetchSummariesBtn');
-            const summariesContainer = document.getElementById('executiveConfluenceSummaries');
-            
-            if (!currentIssues || currentIssues.length === 0) {
-                alert('Please fetch Jira data first.');
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = '⏳ Fetching...';
-            summariesContainer.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="loading">Fetching summaries from Confluence...</div></div>';
-            
-            try {
-                const summaries = await fetchAllConfluenceSummaries(currentIssues);
-                
-                // Group summaries by type (CG vs PG)
-                const cgSummaries = [];
-                const pgSummaries = [];
-                
-                currentIssues.forEach(issue => {
-                    if (issue.cg && summaries[issue.cg] && summaries[issue.cg].success) {
-                        cgSummaries.push({
-                            issueKey: issue.key,
-                            issueSummary: issue.summary,
-                            url: issue.cg,
-                            summary: summaries[issue.cg].summary,
-                            title: summaries[issue.cg].title
-                        });
-                    }
-                    if (issue.pg && summaries[issue.pg] && summaries[issue.pg].success) {
-                        pgSummaries.push({
-                            issueKey: issue.key,
-                            issueSummary: issue.summary,
-                            url: issue.pg,
-                            summary: summaries[issue.pg].summary,
-                            title: summaries[issue.pg].title
-                        });
-                    }
-                });
-                
-                // Display summaries
-                let html = '';
-                
-                if (cgSummaries.length > 0) {
-                    html += '<div style="margin-bottom: 30px;">';
-                    html += '<h4 style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #667eea;">📘 CG Summaries</h4>';
-                    cgSummaries.forEach(item => {
-                        html += `
-                            <div style="background: #f8f8f8; border-left: 4px solid #667eea; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                    <div>
-                                        <strong><a href="${item.url}" target="_blank" style="color: #667eea; text-decoration: none;">${item.issueKey}</a></strong>
-                                        <span style="color: #666; margin-left: 10px;">${item.issueSummary}</span>
-                                    </div>
-                                    <a href="${item.url}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 12px;">Open →</a>
-                                </div>
-                                <div style="background: white; padding: 12px; border-radius: 4px; font-size: 14px; line-height: 1.6; color: #333;">
-                                    ${item.summary.substring(0, 300)}${item.summary.length > 300 ? '...' : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                }
-                
-                if (pgSummaries.length > 0) {
-                    html += '<div style="margin-bottom: 30px;">';
-                    html += '<h4 style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #10b981;">📗 PG Summaries</h4>';
-                    pgSummaries.forEach(item => {
-                        html += `
-                            <div style="background: #f8f8f8; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                    <div>
-                                        <strong><a href="${item.url}" target="_blank" style="color: #10b981; text-decoration: none;">${item.issueKey}</a></strong>
-                                        <span style="color: #666; margin-left: 10px;">${item.issueSummary}</span>
-                                    </div>
-                                    <a href="${item.url}" target="_blank" style="color: #3b82f6; text-decoration: none; font-size: 12px;">Open →</a>
-                                </div>
-                                <div style="background: white; padding: 12px; border-radius: 4px; font-size: 14px; line-height: 1.6; color: #333;">
-                                    ${item.summary.substring(0, 300)}${item.summary.length > 300 ? '...' : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                }
-                
-                if (cgSummaries.length === 0 && pgSummaries.length === 0) {
-                    html = '<div style="padding: 20px; text-align: center; color: #666;"><p>No Confluence summaries found. Make sure CG and PG fields are populated in Jira issues.</p></div>';
-                }
-                
-                summariesContainer.innerHTML = html;
-                btn.disabled = false;
-                btn.textContent = '📥 Fetch All Summaries';
-            } catch (err) {
-                console.error('Error fetching executive summaries:', err);
-                summariesContainer.innerHTML = `
-                    <div style="padding: 20px; color: #dc2626;">
-                        <p><strong>Error:</strong> ${err.message}</p>
-                        <p style="margin-top: 10px; font-size: 14px; color: #666;">
-                            Make sure you have provided your Confluence PAT token in <code>confluence-key-private.txt</code>
-                        </p>
-                    </div>
-                `;
-                btn.disabled = false;
-                btn.textContent = '📥 Fetch All Summaries';
-            }
-        }
 
         // Build Executive Summary Cards
         function buildExecutiveSummary(issues) {
@@ -1636,7 +1423,7 @@
                     }
                     
                     const jql = generateFeatureJQL(feature.key);
-                    const url = `http://localhost:3001/api/fetch-all-data?jql=${encodeURIComponent(jql)}&t=${Date.now()}`;
+                    const url = `http://localhost:7842/api/fetch-all-data?jql=${encodeURIComponent(jql)}&t=${Date.now()}`;
                     const response = await fetch(url, {
                         headers: {
                             'X-Jira-Token': storedToken
@@ -1700,9 +1487,9 @@
         // API functions
         async function loadTableConfig() {
             try {
-                console.log('Loading table config from http://localhost:3001/api/table-config');
+                console.log('Loading table config from http://localhost:7842/api/table-config');
                 // Force reload by adding timestamp and cache-busting headers
-                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now(), {
+                const response = await fetch('http://localhost:7842/api/table-config?t=' + Date.now(), {
                     cache: 'no-cache',
                     headers: {
                         'Cache-Control': 'no-cache'
@@ -1752,57 +1539,87 @@
                 return;
             }
             
+            // Special columns for ticket counts
+            const specialColumns = [
+                { key: 'outstandingTasks', label: 'Outstanding Tasks' },
+                { key: 'bugs', label: 'Bugs' },
+                { key: 'tests', label: 'Tests' },
+                { key: 'otherTickets', label: 'Other Tickets' }
+            ];
+            
             const row = document.createElement('tr');
             columnsToUse.forEach(column => {
                 // Only show active columns (if active property exists)
                 if (column.active !== false) {
                     const th = document.createElement('th');
-                    th.textContent = column.label || column.key;
+                    let displayName = column.label;
+                    
+                    // Special handling for Confluence fields (CG/PG) - use page title or default
+                    if (column.type === 'confluence') {
+                        if (column.key === 'pg' || column.jiraField === 'customfield_10001') {
+                            displayName = confluencePageTitles['customfield_10001'] || 'PG Completion';
+                        } else if (column.key === 'cg' || column.jiraField === 'customfield_10000') {
+                            displayName = confluencePageTitles['customfield_10000'] || 'CG Completion';
+                        } else {
+                            displayName = column.label || column.key;
+                        }
+                    }
+                    // For custom fields (but NOT CG/PG Confluence fields), prioritize fieldNameMap over hardcoded label
+                    else if (column.key && (column.key.startsWith('customfield_') || column.jiraField?.startsWith('customfield_'))
+                             && column.jiraField !== 'customfield_10000' && column.jiraField !== 'customfield_10001') {
+                        const fieldId = column.key.startsWith('customfield_') ? column.key : column.jiraField;
+                        // Check if we have a real field name from Jira API
+                        const fieldNameFromMap = fieldNameMap[fieldId] || fieldNameMap[column.key] || fieldNameMap[column.jiraField];
+                        if (fieldNameFromMap) {
+                            displayName = fieldNameFromMap; // Override label with actual field name
+                            console.log(`✅ Using field name from Jira: ${fieldId} -> "${fieldNameFromMap}"`);
+                        } else {
+                            // Fall back to label or key if field name not loaded yet
+                            displayName = column.label || column.key;
+                            console.log(`⚠️ Field name not found in map for ${fieldId}, using label: "${displayName}"`);
+                        }
+                    } else if (!displayName) {
+                        // For non-custom fields, use label or key
+                        displayName = column.label || column.key;
+                    }
+                    
+                    th.textContent = displayName;
                     th.className = 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50';
                     row.appendChild(th);
                 }
             });
+            
+            // Add special column headers
+            specialColumns.forEach(specialCol => {
+                const th = document.createElement('th');
+                th.textContent = specialCol.label;
+                th.className = 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50';
+                th.style.cursor = 'help';
+                th.title = 'Click count to view JQL query';
+                row.appendChild(th);
+            });
+            
             tableHeader.appendChild(row);
         }
 
-        function createFilters() {
-            const filtersContainer = document.getElementById('filtersContainer');
-            if (!filtersContainer) return;
-
-            filtersContainer.innerHTML = '';
-
-            // Use allColumns instead of just defaultColumns
-            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
-                ? tableConfig.allColumns 
-                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
-            
-            if (!columnsToUse || columnsToUse.length === 0) {
-                console.warn('No table configuration available for filters');
-                return;
-            }
-
-            // Create filter for each column
-            columnsToUse.filter(col => col.active !== false).forEach(column => {
-                if (column && column.key && column.key !== 'url') {
-                    const filterDiv = document.createElement('div');
-                    filterDiv.className = 'filter-group';
-                    filterDiv.innerHTML = `
-                        <label class="filter-label">${column.label || column.key}</label>
-                        <select class="filter-select" id="filter-${column.key}" multiple>
-                            <option value="">All ${column.label || column.key}</option>
-                        </select>
-                    `;
-                    filtersContainer.appendChild(filterDiv);
-                }
-            });
-        }
 
         async function fetchAllData() {
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
             const issuesTable = document.getElementById('issuesTable');
             const stats = document.getElementById('stats');
-            const customJql = document.getElementById('customJql').value;
+            let customJql = document.getElementById('customJql').value;
+            console.log('🔍 [fetchAllData] Original JQL:', customJql);
+
+            // Fix common typo: fixVerison -> fixVersion
+            if (customJql && customJql.includes('fixVerison')) {
+                console.warn('⚠️ [fetchAllData] Fixed typo: "fixVerison" -> "fixVersion"');
+                customJql = customJql.replace(/fixVerison/gi, 'fixVersion');
+                document.getElementById('customJql').value = customJql;
+                console.log('✅ [fetchAllData] Corrected JQL:', customJql);
+            } else {
+                console.log('✅ [fetchAllData] No typo found in JQL');
+            }
 
             loading.style.display = 'block';
             error.style.display = 'none';
@@ -1815,31 +1632,192 @@
                     throw new Error('Please authenticate first. Click the Authenticate button.');
                 }
                 
-                const url = customJql ? `http://localhost:3001/api/fetch-all-data?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:3001/api/fetch-all-data?t=${Date.now()}`;
+                const url = customJql ? `http://localhost:7842/api/fetch-all-data?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:7842/api/fetch-all-data?t=${Date.now()}`;
+                console.log('🌐 [fetchAllData] Sending request with JQL:', customJql);
+                console.log('🌐 [fetchAllData] Request URL:', url);
+                
+                const headers = {
+                    'X-Jira-Token': storedToken
+                };
+                
+                // Add Confluence token if available
+                const confluenceToken = localStorage.getItem('confluence_bearer_token');
+                if (confluenceToken) {
+                    headers['X-Confluence-Token'] = confluenceToken;
+                    console.log('🔑 [fetchAllData] Using separate Confluence token');
+                } else {
+                    console.log('🔑 [fetchAllData] Using Jira token for Confluence');
+                }
+                
                 const response = await fetch(url, {
-                    headers: {
-                        'X-Jira-Token': storedToken
-                    }
+                    headers: headers
                 });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
+                }
+                
                 const data = await response.json();
 
                 if (data.success) {
                     console.log('Data fetched successfully. Issues count:', data.issues ? data.issues.length : 0);
-                    currentIssues = data.issues;
+                    console.log('📊 Total tickets from API:', data.total || 0);
                     
-                    // Show the table
-                    const issuesTable = document.getElementById('issuesTable');
-                    if (issuesTable) {
-                        issuesTable.style.display = 'table';
+                    // Store total from API
+                    totalTicketsFromAPI = data.total || 0;
+                    
+                    // Store all tickets in background
+                    allIssues = data.issues || [];
+                    console.log('📦 Total issues received:', allIssues.length);
+                    console.log('📦 Sample issue structure:', allIssues.length > 0 ? Object.keys(allIssues[0]) : 'No issues');
+                    if (allIssues.length > 0) {
+                        console.log('📦 First issue full structure:', JSON.stringify(allIssues[0], null, 2));
                     }
                     
-                    displayIssues(data.issues);
-                    updateStats(data.issues);
+                    // Filter to show only FEAT or INITIATIVE tickets
+                    // Check multiple possible field names for issuetype
+                    let featOrInitiative = allIssues.filter(issue => {
+                        if (!issue) return false;
+                        
+                        // Try different possible field names for issuetype
+                        let type = '';
+                        if (issue.issuetype) {
+                            if (typeof issue.issuetype === 'string') {
+                                type = issue.issuetype;
+                            } else if (typeof issue.issuetype === 'object') {
+                                type = issue.issuetype.name || issue.issuetype.value || '';
+                            } else {
+                                type = String(issue.issuetype);
+                            }
+                        } else if (issue.type) {
+                            // Try 'type' as alternative
+                            type = typeof issue.type === 'string' ? issue.type : (issue.type?.name || '');
+                        } else if (issue.fields && issue.fields.issuetype) {
+                            // Check nested fields structure
+                            const it = issue.fields.issuetype;
+                            type = typeof it === 'string' ? it : (it.name || it.value || '');
+                        }
+                        
+                        const normalizedType = type.toLowerCase();
+                        const isFeatOrInitiative = normalizedType.includes('feat') || normalizedType.includes('initiative');
+                        
+                        // Debug: log first few issues to see structure
+                        if (allIssues.indexOf(issue) < 3) {
+                            console.log('🔍 Sample issue filter check:', {
+                                key: issue.key,
+                                hasIssuetype: !!issue.issuetype,
+                                issuetype: issue.issuetype,
+                                hasType: !!issue.type,
+                                type: issue.type,
+                                normalizedType: normalizedType,
+                                isFeatOrInitiative: isFeatOrInitiative
+                            });
+                        }
+                        
+                        return isFeatOrInitiative;
+                    });
+                    
+                    console.log(`Filtered to ${featOrInitiative.length} FEAT/INITIATIVE tickets from ${allIssues.length} total tickets`);
+                    
+                    // If no FEAT/INITIATIVE found, show all issues instead of empty table
+                    if (featOrInitiative.length === 0 && allIssues.length > 0) {
+                        console.warn('No FEAT/INITIATIVE tickets found. Showing all issues.');
+                        console.log('Sample issue types found:', allIssues.slice(0, 5).map(i => ({
+                            key: i.key,
+                            issuetype: i.issuetype
+                        })));
+                        featOrInitiative = allIssues; // Show all issues if no FEAT/INITIATIVE found
+                    }
+                    
+                    currentIssues = featOrInitiative;
+                    console.log('✅ Final issues to display:', featOrInitiative.length);
+                    console.log('✅ Sample final issue:', featOrInitiative.length > 0 ? {
+                        key: featOrInitiative[0].key,
+                        summary: featOrInitiative[0].summary,
+                        issuetype: featOrInitiative[0].issuetype,
+                        allKeys: Object.keys(featOrInitiative[0])
+                    } : 'No issues');
+                    
+                    // Load field names for better column display
+                    await loadFieldNames();
+                    
+                    // Recreate table header with updated field names
+                    if (tableConfig) {
+                        createTableHeader();
+                    }
+                    
+                    console.log('📊 Calling displayIssues with', featOrInitiative.length, 'issues');
+                    
+                    // CRITICAL: Ensure table container is visible BEFORE calling displayIssues
+                    const tableContainer = document.querySelector('.table-container');
+                    const tableWrapper = document.querySelector('.table-wrapper');
+                    const issuesTable = document.getElementById('issuesTable');
+                    const statsDiv = document.getElementById('stats');
+                    
+                    // Show stats first
+                    if (statsDiv) {
+                        statsDiv.style.display = 'block';
+                        console.log('✅ Stats element displayed');
+                    }
+                    
+                    // Force table container to be visible BEFORE rendering
+                    if (tableContainer) {
+                        tableContainer.style.display = 'block';
+                        tableContainer.style.visibility = 'visible';
+                        tableContainer.style.opacity = '1';
+                        console.log('✅ Table container made visible BEFORE rendering');
+                    }
+                    
+                    if (tableWrapper) {
+                        tableWrapper.style.display = 'block';
+                        tableWrapper.style.visibility = 'visible';
+                        tableWrapper.style.opacity = '1';
+                        console.log('✅ Table wrapper made visible BEFORE rendering');
+                    }
+                    
+                    if (issuesTable) {
+                        // Don't set display yet - let renderTable do it after rendering
+                        console.log('✅ Table element found');
+                    } else {
+                        console.error('❌ Table element not found!');
+                    }
+                    
+                    // Now display issues (this will call renderTable which will populate the table)
+                    displayIssues(featOrInitiative);
+                    updateStats(featOrInitiative, totalTicketsFromAPI);
+                    
+                    // Final check after a short delay to ensure everything is visible
+                    setTimeout(() => {
+                        const finalTable = document.getElementById('issuesTable');
+                        const finalContainer = document.querySelector('.table-container');
+                        const finalBody = document.getElementById('issuesTableBody');
+                        
+                        if (finalTable) {
+                            finalTable.style.display = 'table';
+                            finalTable.style.visibility = 'visible';
+                            finalTable.style.width = '100%';
+                            console.log('✅ [Final Check] Table element displayed');
+                        }
+                        
+                        if (finalContainer) {
+                            finalContainer.style.display = 'block';
+                            finalContainer.style.visibility = 'visible';
+                            console.log('✅ [Final Check] Table container displayed');
+                        }
+                        
+                        if (finalBody) {
+                            console.log('✅ [Final Check] Table body has', finalBody.children.length, 'rows');
+                            if (finalBody.children.length === 0) {
+                                console.error('❌ [Final Check] Table body is EMPTY!');
+                            }
+                        }
+                    }, 500);
                     
                     // Update executive view if visible
                     const executiveView = document.getElementById('executiveView');
                     if (executiveView && executiveView.style.display !== 'none') {
-                        buildExecutiveDashboard(data.issues);
+                        buildExecutiveDashboard(featOrInitiative);
                     }
                     
                     console.log('All data fetched successfully:', data.message);
@@ -1852,10 +1830,12 @@
                 let errorMsg = err.message || 'Failed to fetch data';
                 
                 // Provide helpful error messages
-                if (errorMsg.includes('authenticate') || errorMsg.includes('token')) {
-                    errorMsg += ' Please click the Authenticate button and enter your Bearer token.';
+                if (err.message && err.message.includes('Failed to fetch')) {
+                    errorMsg = 'Failed to connect to server. Please make sure the server is running on http://localhost:7842. Check the browser console for more details.';
+                } else if (errorMsg.includes('authenticate') || errorMsg.includes('token')) {
+                    errorMsg += ' Please click the "Test Jira" button and enter your Bearer token.';
                 } else if (errorMsg.includes('HTTP 401') || errorMsg.includes('HTTP 403')) {
-                    errorMsg += ' Your token may be invalid or expired. Please re-authenticate.';
+                    errorMsg += ' Your token may be invalid or expired. Please re-authenticate using the "Test Jira" button.';
                 }
                 
                 document.getElementById('errorMessage').textContent = errorMsg;
@@ -1869,7 +1849,18 @@
             const error = document.getElementById('error');
             const issuesTable = document.getElementById('issuesTable');
             const stats = document.getElementById('stats');
-            const customJql = document.getElementById('customJql').value;
+            let customJql = document.getElementById('customJql').value;
+            console.log('🔍 [refreshColumns] Original JQL:', customJql);
+
+            // Fix common typo: fixVerison -> fixVersion
+            if (customJql && customJql.includes('fixVerison')) {
+                console.warn('⚠️ [refreshColumns] Fixed typo: "fixVerison" -> "fixVersion"');
+                customJql = customJql.replace(/fixVerison/gi, 'fixVersion');
+                document.getElementById('customJql').value = customJql;
+                console.log('✅ [refreshColumns] Corrected JQL:', customJql);
+            } else {
+                console.log('✅ [refreshColumns] No typo found in JQL');
+            }
 
             loading.style.display = 'block';
             error.style.display = 'none';
@@ -1882,7 +1873,8 @@
                     throw new Error('Please authenticate first. Click the Authenticate button.');
                 }
                 
-                const url = customJql ? `http://localhost:3001/api/refresh-columns?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:3001/api/refresh-columns?t=${Date.now()}`;
+                const url = customJql ? `http://localhost:7842/api/refresh-columns?jql=${encodeURIComponent(customJql)}&t=${Date.now()}` : `http://localhost:7842/api/refresh-columns?t=${Date.now()}`;
+                console.log('🌐 [refreshColumns] Sending request with JQL:', customJql);
                 console.log('Refreshing columns from:', url);
                 const response = await fetch(url, {
                     headers: {
@@ -1900,15 +1892,56 @@
 
                 if (data.success) {
                     console.log('Columns refreshed successfully. Issues count:', data.issues ? data.issues.length : 0);
-                    currentIssues = data.issues;
+                    console.log('📊 Total tickets from API:', data.total || 0);
+                    
+                    // Store total from API
+                    totalTicketsFromAPI = data.total || 0;
+                    
+                    // Store all tickets in background (same as fetchAllData)
+                    allIssues = data.issues || [];
+                    
+                    // Filter to show only FEAT or INITIATIVE tickets
+                    let featOrInitiative = allIssues.filter(issue => {
+                        if (!issue) return false;
+                        
+                        // Try different possible field names for issuetype
+                        let type = '';
+                        if (issue.issuetype) {
+                            if (typeof issue.issuetype === 'string') {
+                                type = issue.issuetype;
+                            } else if (typeof issue.issuetype === 'object') {
+                                type = issue.issuetype.name || issue.issuetype.value || '';
+                            } else {
+                                type = String(issue.issuetype);
+                            }
+                        } else if (issue.type) {
+                            type = typeof issue.type === 'string' ? issue.type : (issue.type?.name || '');
+                        } else if (issue.fields && issue.fields.issuetype) {
+                            const it = issue.fields.issuetype;
+                            type = typeof it === 'string' ? it : (it.name || it.value || '');
+                        }
+                        
+                        const normalizedType = type.toLowerCase();
+                        return normalizedType.includes('feat') || normalizedType.includes('initiative');
+                    });
+                    
+                    // If no FEAT/INITIATIVE found, show all issues
+                    if (featOrInitiative.length === 0 && allIssues.length > 0) {
+                        featOrInitiative = allIssues;
+                    }
+                    
+                    currentIssues = featOrInitiative;
                     
                     // Show the table
                     if (issuesTable) {
                         issuesTable.style.display = 'table';
                     }
                     
-                    displayIssues(data.issues);
-                    updateStats(data.issues);
+                    // Load field names for better column display
+                    await loadFieldNames();
+                    
+                    displayIssues(featOrInitiative);
+                    updateStats(featOrInitiative, totalTicketsFromAPI);
                     
                     // Update executive view if visible
                     const executiveView = document.getElementById('executiveView');
@@ -1939,47 +1972,114 @@
         }
 
         function displayIssues(issues) {
-            console.log('displayIssues called with', issues ? issues.length : 0, 'issues');
+            console.log('🔵 [displayIssues] START - Called with', issues ? issues.length : 0, 'issues');
+            
             if (!Array.isArray(issues)) {
-                console.error('displayIssues: issues is not an array:', issues);
+                console.error('❌ [displayIssues] issues is not an array:', issues);
                 issues = [];
             }
+            
+            // Store issues
             currentIssues = issues;
             filteredIssues = [...issues];
             currentPage = 1;
             
+            console.log('✅ [displayIssues] Stored issues:', {
+                currentIssues: currentIssues.length,
+                filteredIssues: filteredIssues.length,
+                sampleIssue: issues.length > 0 ? {
+                    key: issues[0].key,
+                    summary: issues[0].summary?.substring(0, 50),
+                    hasData: Object.keys(issues[0]).length
+                } : null
+            });
+            
             // Ensure table config is loaded before rendering
             if (!tableConfig || !tableConfig.allColumns || tableConfig.allColumns.length === 0) {
-                console.log('Table config not loaded yet, loading now...');
+                console.log('⏳ [displayIssues] Table config not loaded, loading now...');
                 loadTableConfig().then(() => {
-                    console.log('Table config loaded, rendering table...');
-                    renderTable();
+                    console.log('✅ [displayIssues] Table config loaded');
+                    // CRITICAL: Create header FIRST, then render
+                    createTableHeader();
+                    // Small delay to ensure header is in DOM
+                    setTimeout(() => {
+                        renderTable();
+                    }, 50);
                 }).catch(err => {
-                    console.error('Failed to load table config:', err);
-                    renderTable(); // Render anyway with whatever we have
+                    console.error('❌ [displayIssues] Failed to load table config:', err);
+                    // Try to create header and render anyway
+                    createTableHeader();
+                    setTimeout(() => {
+                        renderTable();
+                    }, 50);
                 });
             } else {
-                renderTable();
+                console.log('✅ [displayIssues] Table config already loaded');
+                // CRITICAL: Create header FIRST, then render
+                createTableHeader();
+                // Small delay to ensure header is in DOM
+                setTimeout(() => {
+                    renderTable();
+                }, 50);
             }
+            
+            console.log('🔵 [displayIssues] END');
         }
 
         function renderTable() {
-            console.log('renderTable called. filteredIssues length:', filteredIssues ? filteredIssues.length : 'undefined');
+            console.log('🟢 [renderTable] START');
+            console.log('🟢 [renderTable] filteredIssues:', {
+                length: filteredIssues ? filteredIssues.length : 'undefined',
+                type: typeof filteredIssues,
+                isArray: Array.isArray(filteredIssues),
+                sample: filteredIssues && filteredIssues.length > 0 ? {
+                    key: filteredIssues[0].key,
+                    summary: filteredIssues[0].summary?.substring(0, 30)
+                } : null
+            });
+            
+            // Get all table elements
             const tableBody = document.getElementById('issuesTableBody');
             const issuesTable = document.getElementById('issuesTable');
             const tableControls = document.getElementById('tableControls');
             const pagination = document.getElementById('pagination');
+            const tableHeader = document.getElementById('tableHeader');
+            const tableContainer = document.querySelector('.table-container');
+            const tableWrapper = document.querySelector('.table-wrapper');
             
+            // Validate critical elements
             if (!tableBody) {
-                console.error('Table body element not found!');
+                console.error('❌ [renderTable] CRITICAL: Table body element not found!');
                 return;
             }
             
+            if (!issuesTable) {
+                console.error('❌ [renderTable] CRITICAL: Table element not found!');
+                return;
+            }
+            
+            console.log('✅ [renderTable] All table elements found:', {
+                tableBody: !!tableBody,
+                issuesTable: !!issuesTable,
+                tableHeader: !!tableHeader,
+                tableControls: !!tableControls,
+                tableContainer: !!tableContainer,
+                tableWrapper: !!tableWrapper
+            });
+            
+            // Clear table body
             tableBody.innerHTML = '';
+            console.log('✅ [renderTable] Table body cleared');
 
             if (!Array.isArray(filteredIssues)) {
-                console.warn('filteredIssues is not an array, setting to empty array');
+                console.warn('filteredIssues is not an array, setting to empty array. Current value:', filteredIssues);
                 filteredIssues = [];
+            }
+            
+            // If filteredIssues is empty but currentIssues has data, use currentIssues
+            if (filteredIssues.length === 0 && currentIssues && currentIssues.length > 0) {
+                console.warn('filteredIssues is empty but currentIssues has data. Using currentIssues.');
+                filteredIssues = [...currentIssues];
             }
 
             // Use allColumns (defaultColumns + userColumns) instead of just defaultColumns
@@ -1991,6 +2091,14 @@
             
             // Filter to only active columns
             const activeColumns = columnsToUse.filter(col => col.active !== false);
+            
+            // Add special columns for ticket counts
+            const specialColumns = [
+                { key: 'outstandingTasks', label: 'Outstanding Tasks', type: 'count' },
+                { key: 'bugs', label: 'Bugs', type: 'count' },
+                { key: 'tests', label: 'Tests', type: 'count' },
+                { key: 'otherTickets', label: 'Other Tickets', type: 'count' }
+            ];
             
             console.log('Active columns:', activeColumns.length);
             
@@ -2027,45 +2135,43 @@
                 // Ensure filteredIssues is an array with valid length
                 const totalIssues = Array.isArray(filteredIssues) ? filteredIssues.length : 0;
                 
-                // Calculate pagination
-                const totalPages = totalIssues > 0 ? Math.ceil(totalIssues / pageSize) : 1;
-                const startIndex = (currentPage - 1) * pageSize;
-                const endIndex = Math.min(startIndex + pageSize, totalIssues);
-                const pageIssues = totalIssues > 0 ? filteredIssues.slice(startIndex, endIndex) : [];
-                
-                // Show controls
+                // Show controls but hide pagination
                 if (tableControls) tableControls.style.display = 'flex';
-                if (pagination) pagination.style.display = 'flex';
+                if (pagination) pagination.style.display = 'none'; // Hide pagination
                 
-                // Update info
+                // Update info - show total count
                 if (document.getElementById('tableInfo')) {
-                    const infoText = totalIssues > 0 
-                        ? `Showing ${startIndex + 1}-${endIndex} of ${totalIssues} tickets`
+                    const total = Number.isInteger(totalIssues) ? totalIssues : 0;
+                    const infoText = total > 0 
+                        ? `Showing ${total} tickets`
                         : 'No tickets to display';
                     document.getElementById('tableInfo').textContent = infoText;
                 }
-                if (document.getElementById('paginationInfo')) {
-                    const pageText = totalPages > 0 
-                        ? `Page ${currentPage} of ${totalPages}`
-                        : 'Page 1 of 1';
-                    document.getElementById('paginationInfo').textContent = pageText;
+                
+                // Ensure table is visible
+                if (issuesTable) {
+                    issuesTable.style.display = 'table';
                 }
                 
-                // Update pagination buttons
-                if (document.getElementById('prevPage')) {
-                    document.getElementById('prevPage').disabled = currentPage === 1 || totalPages === 0;
-                }
-                if (document.getElementById('nextPage')) {
-                    document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
-                }
-                
-                // Render issues
-                pageIssues.forEach(issue => {
+                // Render all issues (no pagination)
+                filteredIssues.forEach(issue => {
                     const row = document.createElement('tr');
                     
+                    // Render regular columns
                     activeColumns.forEach(column => {
                         const td = document.createElement('td');
                         const value = issue[column.key] || '';
+                        
+                        // Debug logging for CG/PG columns
+                        if ((column.key === 'cg' || column.key === 'pg') && filteredIssues.indexOf(issue) === 0) {
+                            console.log(`🔍 [renderTable] ${column.key.toUpperCase()} column for ${issue.key}:`, {
+                                value: value,
+                                valueType: typeof value,
+                                hasValue: !!value,
+                                columnKey: column.key,
+                                columnJiraField: column.jiraField
+                            });
+                        }
                         
                         // Add class for summary column to allow wrapping
                         if (column.key === 'summary') {
@@ -2086,22 +2192,60 @@
                                 }
                                 break;
                             case 'confluence':
-                                if (value) {
-                                    const confluenceLink = document.createElement('a');
-                                    confluenceLink.href = value;
-                                    confluenceLink.target = '_blank';
-                                    confluenceLink.textContent = column.key.toUpperCase();
-                                    confluenceLink.className = 'confluence-link';
-                                    confluenceLink.style.cssText = 'color: #3b82f6; text-decoration: none; padding: 4px 8px; border: 1px solid #3b82f6; border-radius: 4px; display: inline-block; font-size: 12px;';
-                                    confluenceLink.onclick = (e) => {
-                                        e.preventDefault();
-                                        showConfluenceSummary(value, column.key.toUpperCase(), issue.key);
-                                    };
-                                    td.appendChild(confluenceLink);
-                                } else {
-                                    td.textContent = '-';
-                                    td.style.color = '#999';
+                                // Handle multiple links with titles
+                                let links = [];
+                                let linkObjects = [];
+                                
+                                // Check if we have link objects stored (with titles)
+                                const linksKey = column.key + '_links';
+                                if (issue[linksKey] && Array.isArray(issue[linksKey])) {
+                                    linkObjects = issue[linksKey];
+                                } else if (value && value !== 'No link' && value !== '-') {
+                                    // Fallback: parse from comma-separated string
+                                    if (value.includes(',')) {
+                                        links = value.split(',').map(url => url.trim()).filter(url => url && (url.startsWith('http://') || url.startsWith('https://')));
+                                    } else if (value.startsWith('http://') || value.startsWith('https://')) {
+                                        links = [value];
+                                    }
                                 }
+                                
+                                // Helper function to extract title from URL
+                                const extractTitleFromUrl = (url) => {
+                                    const titleMatch = url.match(/\/pages\/\d+\/([^\/\?]+)/);
+                                    if (titleMatch) {
+                                        let title = decodeURIComponent(titleMatch[1]);
+                                        title = title.replace(/\+/g, ' ').replace(/-/g, ' ').trim();
+                                        return title;
+                                    }
+                                    return null;
+                                };
+                                
+                                if (linkObjects.length > 0) {
+                                    // Use link objects with titles
+                                    td.innerHTML = linkObjects.map((linkObj, idx) => {
+                                        const url = linkObj.url || linkObj;
+                                        const title = linkObj.title || extractTitleFromUrl(url) || `Link ${idx + 1}`;
+                                        // Extract page title from Confluence URL for header (only for first link)
+                                        if (idx === 0 && column.jiraField && (column.jiraField === 'customfield_10000' || column.jiraField === 'customfield_10001')) {
+                                            extractConfluencePageTitle(url, column.jiraField);
+                                        }
+                                        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0065ff; text-decoration: underline;">${title}</a>`;
+                                    }).join(' | ');
+                                } else if (links.length > 0) {
+                                    // Fallback: use URLs and extract titles
+                                    td.innerHTML = links.map((url, idx) => {
+                                        const title = extractTitleFromUrl(url) || `Link ${idx + 1}`;
+                                        // Extract page title from Confluence URL for header (only for first link)
+                                        if (idx === 0 && column.jiraField && (column.jiraField === 'customfield_10000' || column.jiraField === 'customfield_10001')) {
+                                            extractConfluencePageTitle(url, column.jiraField);
+                                        }
+                                        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0065ff; text-decoration: underline;">${title}</a>`;
+                                    }).join(' | ');
+                                } else {
+                                    td.textContent = 'No link';
+                                }
+                                
+                                // Skip the default rendering for confluence type
                                 break;
                             case 'badge':
                                 const badge = document.createElement('span');
@@ -2137,8 +2281,17 @@
                                 // Special handling for customfield_23073 - summarize it
                                 if (column.key === 'customfield_23073' || column.jiraField === 'customfield_23073') {
                                     displaySummarizedField(td, value, issue.key, column.key);
+                                }
+                                // Special handling for customfield_23560 (Risk Indicator) - display value
+                                else if (column.key === 'customfield_23560' || column.jiraField === 'customfield_23560') {
+                                    if (value && value !== '') {
+                                        td.textContent = value;
+                                    } else {
+                                        td.textContent = '-';
+                                        td.style.color = '#999';
+                                    }
                                 } else {
-                                    td.textContent = value;
+                                    td.textContent = value || '-';
                                 }
                                 break;
                         }
@@ -2146,54 +2299,112 @@
                         row.appendChild(td);
                     });
                     
+                    // Render special count columns
+                    specialColumns.forEach(specialCol => {
+                        const td = document.createElement('td');
+                        td.style.textAlign = 'center';
+                        td.style.padding = '8px';
+                        
+                        const featureKey = issue.key || '';
+                        const count = countRelatedTickets(featureKey, specialCol.key === 'outstandingTasks' ? 'tasks' : specialCol.key);
+                        const jql = generateJQLForType(featureKey, specialCol.key === 'outstandingTasks' ? 'tasks' : specialCol.key);
+                        
+                        if (count > 0 && jql) {
+                            const link = document.createElement('a');
+                            link.href = '#';
+                            link.textContent = count;
+                            link.style.cssText = 'color: #3b82f6; text-decoration: none; font-weight: 600;';
+                            link.title = 'Click to view JQL query';
+                            link.onclick = (e) => {
+                                e.preventDefault();
+                                // Copy JQL to clipboard and show in input
+                                document.getElementById('customJql').value = jql;
+                                navigator.clipboard.writeText(jql).then(() => {
+                                    alert(`JQL query copied to clipboard and set in query field:\n\n${jql}`);
+                                }).catch(() => {
+                                    document.getElementById('customJql').value = jql;
+                                    alert(`JQL query set in query field:\n\n${jql}`);
+                                });
+                            };
+                            td.appendChild(link);
+                        } else {
+                            td.textContent = count || '0';
+                            td.style.color = '#999';
+                        }
+                        
+                        row.appendChild(td);
+                    });
+                    
                     tableBody.appendChild(row);
                 });
+                
+                console.log('✅ [renderTable] Rendered', filteredIssues.length, 'rows in table body');
+                console.log('✅ [renderTable] Table body children count:', tableBody.children.length);
             }
 
-            issuesTable.style.display = 'table';
+            // CRITICAL: Make table visible AFTER rendering content
+            if (issuesTable) {
+                issuesTable.style.display = 'table';
+                issuesTable.style.visibility = 'visible';
+                issuesTable.style.width = '100%';
+                issuesTable.style.opacity = '1';
+                console.log('✅ [renderTable] Table element made visible');
+            }
             
-            // Populate filter options after displaying issues
-            populateFilterOptions(currentIssues);
-        }
-
-        function populateFilterOptions(issues) {
-            if (!tableConfig || !tableConfig.defaultColumns) return;
-
-            tableConfig.defaultColumns.forEach(column => {
-                if (column.key === 'url') return;
-                
-                const filterSelect = document.getElementById(`filter-${column.key}`);
-                if (!filterSelect) return;
-
-                // Clear existing options except "All"
-                filterSelect.innerHTML = '<option value="">All ' + (column.label || column.key) + '</option>';
-
-                // Get unique values for this column
-                const uniqueValues = [...new Set(issues.map(issue => issue[column.key] || '').filter(value => value !== ''))];
-                
-                uniqueValues.forEach(value => {
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.textContent = value;
-                    filterSelect.appendChild(option);
-                });
+            // Ensure container and wrapper are visible (already declared above)
+            if (tableContainer) {
+                tableContainer.style.display = 'block';
+                tableContainer.style.visibility = 'visible';
+                tableContainer.style.opacity = '1';
+                console.log('✅ [renderTable] Table container made visible');
+            }
+            
+            if (tableWrapper) {
+                tableWrapper.style.display = 'block';
+                tableWrapper.style.visibility = 'visible';
+                tableWrapper.style.opacity = '1';
+                console.log('✅ [renderTable] Table wrapper made visible');
+            }
+            
+            // Final verification
+            const finalRowCount = tableBody ? tableBody.querySelectorAll('tr').length : 0;
+            console.log('✅ [renderTable] FINAL STATE:', {
+                tableDisplay: issuesTable ? issuesTable.style.display : 'N/A',
+                tableVisibility: issuesTable ? issuesTable.style.visibility : 'N/A',
+                containerDisplay: tableContainer ? tableContainer.style.display : 'N/A',
+                rowsInBody: finalRowCount,
+                filteredIssuesCount: filteredIssues.length
             });
+            
+            // Scroll to table if it has data
+            if (filteredIssues.length > 0 && tableContainer) {
+                setTimeout(() => {
+                    tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+            
+            console.log('🟢 [renderTable] END - Complete');
         }
 
         // Pagination and search functions
         function changePageSize() {
             const select = document.getElementById('pageSize');
             if (select) {
-                pageSize = parseInt(select.value);
-                currentPage = 1;
-                renderTable();
+                const newPageSize = parseInt(select.value);
+                if (!isNaN(newPageSize) && newPageSize > 0) {
+                    pageSize = newPageSize;
+                    currentPage = 1;
+                    renderTable();
+                }
             }
         }
 
         function changePage(direction) {
             const totalIssues = Array.isArray(filteredIssues) ? filteredIssues.length : 0;
-            const totalPages = totalIssues > 0 ? Math.ceil(totalIssues / pageSize) : 1;
-            const newPage = currentPage + direction;
+            const validPageSize = (typeof pageSize === 'number' && !isNaN(pageSize) && pageSize > 0) ? pageSize : 50;
+            const validCurrentPage = (typeof currentPage === 'number' && !isNaN(currentPage) && currentPage > 0) ? currentPage : 1;
+            const totalPages = totalIssues > 0 ? Math.ceil(totalIssues / validPageSize) : 1;
+            const newPage = validCurrentPage + direction;
             if (newPage >= 1 && newPage <= totalPages && totalPages > 0) {
                 currentPage = newPage;
                 renderTable();
@@ -2215,7 +2426,7 @@
             // Start with all current issues
             let filtered = [...currentIssues];
             
-            // Apply search query
+            // Apply search query only
             if (searchQuery) {
                 filtered = filtered.filter(issue => {
                     return Object.values(issue).some(value => 
@@ -2224,73 +2435,20 @@
                 });
             }
             
-            // Apply column filters
-            if (tableConfig && tableConfig.allColumns) {
-                const columnsToUse = tableConfig.allColumns.filter(col => col.active !== false);
-                columnsToUse.forEach(column => {
-                    if (column.key === 'url') return;
-                    const filterSelect = document.getElementById(`filter-${column.key}`);
-                    if (filterSelect) {
-                        const selectedValues = Array.from(filterSelect.selectedOptions)
-                            .map(option => option.value)
-                            .filter(v => v !== '');
-                        if (selectedValues.length > 0) {
-                            filtered = filtered.filter(issue => {
-                                const cellValue = String(issue[column.key] || '').toLowerCase();
-                                return selectedValues.some(val => 
-                                    cellValue.includes(val.toLowerCase())
-                                );
-                            });
-                        }
-                    }
-                });
-            }
-            
             filteredIssues = filtered;
             renderTable();
         }
 
-        function applyFilters() {
-            applyFiltersAndSearch();
-        }
-
-        function clearFilters() {
-            // Use allColumns instead of just defaultColumns
-            const columnsToUse = (tableConfig && tableConfig.allColumns && tableConfig.allColumns.length > 0) 
-                ? tableConfig.allColumns.filter(col => col.active !== false)
-                : (tableConfig && tableConfig.defaultColumns ? tableConfig.defaultColumns : []);
-            
-            if (columnsToUse && columnsToUse.length > 0) {
-                columnsToUse.forEach(column => {
-                    if (column.key === 'url') return;
-                    const filterSelect = document.getElementById(`filter-${column.key}`);
-                    if (filterSelect) {
-                        filterSelect.selectedIndex = 0;
-                    }
-                });
-            }
-            
-            // Clear search
-            const searchInput = document.getElementById('tableSearch');
-            if (searchInput) {
-                searchInput.value = '';
-            }
-            searchQuery = '';
-            
-            // Reapply filters (which will show all)
-            applyFiltersAndSearch();
-        }
-
-        // Generate complex JQL query for feature/initiative
-        function generateFeatureJQL(featureKey) {
+        // Generate base JQL query for feature/initiative (for finding related tickets)
+        function generateBaseJQL(featureKey) {
             if (!featureKey || featureKey.trim() === '') {
-                throw new Error('Feature key is required');
+                return '';
             }
             
             const key = featureKey.trim().toUpperCase();
             
-            // Complex JQL query to find all related tickets (any type related to the feature/initiative)
-            const jql = `(
+            // Base JQL query to find all related tickets
+            return `(
                 key = ${key} OR
                 "Parent Link" = ${key} OR
                 "FEAT ID" ~ ${key} OR
@@ -2300,8 +2458,81 @@
                 issueFunction in subtasksOf("key=${key}") OR
                 issueFunction in subtasksOf("issueFunction in issuesInEpics(\"issueFunction in portfolioChildrenOf('key=${key}') \")")
             )`;
+        }
+
+        // Generate JQL for specific ticket type
+        function generateJQLForType(featureKey, type) {
+            const baseJQL = generateBaseJQL(featureKey);
+            if (!baseJQL) return '';
             
-            return jql;
+            const typeConditions = {
+                'tasks': 'AND (issuetype = Task OR issuetype = Story OR issuetype = Sub-task) AND status != Done AND status != Closed',
+                'bugs': 'AND issuetype = Bug AND status != Done AND status != Closed',
+                'tests': 'AND (issuetype = Test OR issuetype = "Test Case" OR issuetype = "Test Execution") AND status != Done AND status != Closed',
+                'other': 'AND issuetype NOT IN (Feature, Initiative, Epic, Bug, Task, Story, Sub-task, Test, "Test Case", "Test Execution") AND status != Done AND status != Closed'
+            };
+            
+            return baseJQL + (typeConditions[type] || '');
+        }
+
+        // Count related tickets of a specific type from allIssues
+        function countRelatedTickets(featureKey, type) {
+            // Ensure allIssues is defined
+            if (typeof allIssues === 'undefined') {
+                console.warn('allIssues is not defined, using currentIssues as fallback');
+                allIssues = currentIssues || [];
+            }
+            
+            if (!allIssues || allIssues.length === 0 || !featureKey) return 0;
+            
+            const key = featureKey.trim().toUpperCase();
+            
+            // Filter allIssues to find related tickets
+            const related = allIssues.filter(issue => {
+                if (!issue || !issue.key) return false;
+                
+                const issueKey = (issue.key || '').toUpperCase();
+                
+                // Get issue fields (handle both direct properties and nested fields)
+                const issueType = typeof issue.issuetype === 'string' 
+                    ? issue.issuetype 
+                    : (issue.issuetype?.name || issue.issuetype || '').toLowerCase();
+                const status = typeof issue.status === 'string'
+                    ? issue.status
+                    : (issue.status?.name || issue.status || '').toLowerCase();
+                const isDone = status === 'done' || status === 'closed' || status === 'resolved';
+                
+                // Check if issue is related to this feature
+                // Simple check: if issue key starts with feature key or is a subtask of it
+                const isRelated = issueKey === key || 
+                                 issueKey.startsWith(key + '-') ||
+                                 (issue.parentLink && issue.parentLink.toUpperCase() === key) ||
+                                 (issue.parent && issue.parent.toUpperCase() === key);
+                
+                if (!isRelated) return false;
+                
+                // Filter by type and status
+                if (type === 'tasks') {
+                    return (issueType.includes('task') || issueType.includes('story') || issueType.includes('sub-task')) && !isDone;
+                } else if (type === 'bugs') {
+                    return issueType.includes('bug') && !isDone;
+                } else if (type === 'tests') {
+                    return (issueType.includes('test') || issueType.includes('test case') || issueType.includes('test execution')) && !isDone;
+                } else if (type === 'other') {
+                    const normalizedType = issueType.toLowerCase();
+                    return !normalizedType.includes('feature') && 
+                           !normalizedType.includes('initiative') && 
+                           !normalizedType.includes('epic') &&
+                           !normalizedType.includes('bug') &&
+                           !normalizedType.includes('task') &&
+                           !normalizedType.includes('story') &&
+                           !normalizedType.includes('sub-task') &&
+                           !normalizedType.includes('test') && !isDone;
+                }
+                return false;
+            });
+            
+            return related.length;
         }
 
         // Fetch all tickets related to a feature/initiative
@@ -2309,13 +2540,37 @@
             const featureKey = document.getElementById('featureKey').value.trim();
             
             if (!featureKey) {
-                alert('Please enter a Feature/Initiative key (e.g., ERA-21110)');
+                alert('Please enter a Feature/Initiative key (e.g., ERA-21110) or a filter query (e.g., filter = 165194)');
                 return;
             }
             
             try {
-                const jql = generateFeatureJQL(featureKey);
-                console.log('🔍 Generated JQL for feature:', jql);
+                let jql;
+                
+                // Check if input is a filter query (starts with "filter" or "filter=")
+                const normalizedInput = featureKey.toLowerCase().trim();
+                if (normalizedInput.startsWith('filter') || normalizedInput.startsWith('filter=')) {
+                    // It's a filter query - normalize it to proper JQL format
+                    if (normalizedInput.includes('=')) {
+                        // Extract the filter ID (e.g., "filter=165194" -> "filter = 165194")
+                        const parts = featureKey.split('=');
+                        if (parts.length === 2) {
+                            const filterId = parts[1].trim();
+                            jql = `filter = ${filterId}`;
+                        } else {
+                            // Already in correct format or more complex, use as-is
+                            jql = featureKey.replace(/filter\s*=/i, 'filter =');
+                        }
+                    } else {
+                        // Already in correct format
+                        jql = featureKey;
+                    }
+                    console.log('🔍 Detected filter query, using JQL:', jql);
+                } else {
+                    // It's a feature key - generate complex JQL
+                    jql = generateFeatureJQL(featureKey);
+                    console.log('🔍 Generated JQL for feature:', jql);
+                }
                 
                 // Set the JQL in the input field
                 document.getElementById('customJql').value = jql;
@@ -2428,7 +2683,7 @@
             await fetchFeatureTicketsFor(featureKey, false);
         }
 
-        function updateStats(issues) {
+        function updateStats(issues, totalFromAPI = null) {
             const stats = document.getElementById('stats');
             const insightsSection = document.getElementById('insightsSection');
             
@@ -2440,61 +2695,108 @@
             // Populate features list
             populateFeaturesList(issues);
             
-            const totalIssues = issues.length;
+            // Use API total if available, otherwise use filtered issues count
+            const totalIssues = totalFromAPI && totalFromAPI > 0 ? totalFromAPI : issues.length;
             
-            // Status categorization (BA/BI perspective)
-            const pendingVerification = issues.filter(issue => 
-                issue.status && issue.status.toLowerCase() === 'resolved'
-            ).length;
+            // Helper function to get status string
+            function getStatusString(issue) {
+                if (!issue || !issue.status) return '';
+                if (typeof issue.status === 'string') return issue.status;
+                if (typeof issue.status === 'object') return issue.status.name || issue.status.value || '';
+                return String(issue.status || '');
+            }
             
-            const inProgressIssues = issues.filter(issue => 
-                issue.status && (
-                    issue.status.toLowerCase().includes('progress') || 
-                    issue.status.toLowerCase().includes('development') ||
-                    issue.status.toLowerCase().includes('review')
-                ) && issue.status.toLowerCase() !== 'resolved'
-            ).length;
+            // Dynamically create stat tiles based on actual statuses from Jira
+            const statusCounts = {};
             
-            const doneIssues = issues.filter(issue => 
-                issue.status && (
-                    issue.status.toLowerCase().includes('done') || 
-                    issue.status.toLowerCase().includes('closed') ||
-                    issue.status.toLowerCase().includes('verified')
-                ) && issue.status.toLowerCase() !== 'resolved'
-            ).length;
+            // Count tickets by actual status
+            issues.forEach(issue => {
+                const status = getStatusString(issue);
+                if (status) {
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
+                }
+            });
             
-            const todoIssues = issues.filter(issue => 
-                issue.status && (
-                    issue.status.toLowerCase().includes('todo') || 
-                    issue.status.toLowerCase().includes('backlog') ||
-                    issue.status.toLowerCase().includes('open')
-                )
-            ).length;
+            // Sort statuses by count (descending)
+            const sortedStatuses = Object.entries(statusCounts)
+                .sort((a, b) => b[1] - a[1]);
             
-            const blockedIssues = issues.filter(issue => {
-                const status = issue.status ? issue.status.toLowerCase() : '';
-                const labels = issue.labels ? (Array.isArray(issue.labels) ? issue.labels.join(' ').toLowerCase() : issue.labels.toLowerCase()) : '';
-                return status.includes('blocked') || labels.includes('blocked');
-            }).length;
-
-            // Update stat cards
-            document.getElementById('totalIssues').textContent = totalIssues;
-            document.getElementById('pendingVerification').textContent = pendingVerification;
-            document.getElementById('inProgressIssues').textContent = inProgressIssues;
-            document.getElementById('doneIssues').textContent = doneIssues;
-            document.getElementById('todoIssues').textContent = todoIssues;
-            document.getElementById('blockedIssues').textContent = blockedIssues || 0;
+            console.log('📊 Status counts:', statusCounts);
+            
+            // Clear existing stat cards
+            stats.innerHTML = '';
+            
+            // Add Total Tickets tile first
+            const totalCard = document.createElement('div');
+            totalCard.className = 'stat-card';
+            totalCard.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;';
+            totalCard.innerHTML = `
+                <div class="stat-number" style="color: white;">${totalIssues}</div>
+                <div class="stat-label" style="color: rgba(255,255,255,0.9);">Total Tickets</div>
+            `;
+            stats.appendChild(totalCard);
+            
+            // Create tiles for each actual status
+            const statusColors = {
+                'done': '#10b981',
+                'closed': '#10b981',
+                'resolved': '#f59e0b',
+                'in progress': '#3b82f6',
+                'inprogress': '#3b82f6',
+                'development': '#3b82f6',
+                'to do': '#6b7280',
+                'todo': '#6b7280',
+                'backlog': '#6b7280',
+                'open': '#6b7280',
+                'blocked': '#ef4444',
+                'ec commit': '#8b5cf6',
+                'ec review': '#8b5cf6'
+            };
+            
+            sortedStatuses.forEach(([status, count]) => {
+                const statusLower = status.toLowerCase();
+                // Find matching color or use a default
+                let color = '#6b7280'; // default gray
+                for (const [key, value] of Object.entries(statusColors)) {
+                    if (statusLower.includes(key)) {
+                        color = value;
+                        break;
+                    }
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.style.cssText = `background: ${color}; color: white;`;
+                card.innerHTML = `
+                    <div class="stat-number" style="color: white;">${count}</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">${status}</div>
+                `;
+                stats.appendChild(card);
+            });
 
             stats.style.display = 'grid';
             
-            // Generate actionable insights
+            // Generate actionable insights (using simplified stats)
             generateInsights(issues, {
                 total: totalIssues,
-                pendingVerification,
-                inProgress: inProgressIssues,
-                done: doneIssues,
-                todo: todoIssues,
-                blocked: blockedIssues
+                statusCounts: statusCounts,
+                pendingVerification: statusCounts['Resolved'] || statusCounts['resolved'] || 0,
+                inProgress: Object.entries(statusCounts).filter(([status]) => {
+                    const s = status.toLowerCase();
+                    return s.includes('progress') || s.includes('development') || s.includes('review');
+                }).reduce((sum, [, count]) => sum + count, 0),
+                done: Object.entries(statusCounts).filter(([status]) => {
+                    const s = status.toLowerCase();
+                    return s.includes('done') || s.includes('closed') || s.includes('verified');
+                }).reduce((sum, [, count]) => sum + count, 0),
+                todo: Object.entries(statusCounts).filter(([status]) => {
+                    const s = status.toLowerCase();
+                    return s.includes('todo') || s.includes('backlog') || s.includes('open');
+                }).reduce((sum, [, count]) => sum + count, 0),
+                blocked: Object.entries(statusCounts).filter(([status]) => {
+                    const s = status.toLowerCase();
+                    return s.includes('blocked');
+                }).reduce((sum, [, count]) => sum + count, 0)
             });
             
             insightsSection.style.display = 'block';
@@ -2503,13 +2805,39 @@
         // Generate actionable BA/BI insights
         function generateInsights(issues, stats) {
             const insightsContent = document.getElementById('insightsContent');
+            if (!insightsContent) return;
+            
             insightsContent.innerHTML = '';
+            
+            // If no issues, show message
+            if (!issues || issues.length === 0 || stats.total === 0) {
+                insightsContent.innerHTML = `
+                    <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px;">
+                        <div style="display: flex; align-items: start; gap: 10px;">
+                            <span style="font-size: 24px;">ℹ️</span>
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 5px 0; font-weight: 600; font-size: 16px;">No Data</h4>
+                                <p style="margin: 0; color: #666; font-size: 14px;">No tickets found. Please fetch data using the "Fetch Data" button.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
             const insights = [];
             
+            // Helper function to get status string
+            function getStatusString(issue) {
+                if (!issue || !issue.status) return '';
+                if (typeof issue.status === 'string') return issue.status;
+                if (typeof issue.status === 'object') return issue.status.name || issue.status.value || '';
+                return String(issue.status || '');
+            }
+            
             // Pending Verification Alert
             if (stats.pendingVerification > 0) {
-                const pendingTickets = issues.filter(i => i.status && i.status.toLowerCase() === 'resolved');
+                const pendingTickets = issues.filter(i => getStatusString(i).toLowerCase() === 'resolved');
                 insights.push({
                     type: 'warning',
                     icon: '⚠️',
@@ -2523,8 +2851,8 @@
             // Blocked Tickets Alert
             if (stats.blocked > 0) {
                 const blockedTickets = issues.filter(i => {
-                    const status = i.status ? i.status.toLowerCase() : '';
-                    const labels = i.labels ? (Array.isArray(i.labels) ? i.labels.join(' ').toLowerCase() : i.labels.toLowerCase()) : '';
+                    const status = getStatusString(i).toLowerCase();
+                    const labels = i.labels ? (Array.isArray(i.labels) ? i.labels.join(' ').toLowerCase() : String(i.labels).toLowerCase()) : '';
                     return status.includes('blocked') || labels.includes('blocked');
                 });
                 insights.push({
@@ -2562,14 +2890,23 @@
                 });
             }
             
-            // No insights
-            if (insights.length === 0) {
+            // No insights - only show "All Good" if there are actually issues
+            if (insights.length === 0 && stats.total > 0) {
                 insights.push({
                     type: 'success',
                     icon: '✅',
                     title: 'All Good!',
                     message: 'No immediate action items. All tickets are progressing well.',
                     action: '',
+                    tickets: []
+                });
+            } else if (stats.total === 0) {
+                insights.push({
+                    type: 'info',
+                    icon: 'ℹ️',
+                    title: 'No Data',
+                    message: 'No tickets found. Please fetch data using the "Fetch Data" button.',
+                    action: 'Click "Fetch Data" to load tickets',
                     tickets: []
                 });
             }
@@ -2609,111 +2946,7 @@
         }
 
 
-        // Authentication functions
-        function showAuthModal() {
-            const modal = document.getElementById('authModal');
-            modal.style.display = 'block';
-            
-            // Check if token is already stored
-            const storedToken = localStorage.getItem('jira_bearer_token');
-            if (storedToken) {
-                document.getElementById('authToken').value = '••••••••••••••••';
-                document.getElementById('authToken').disabled = true;
-                document.getElementById('authEmail').value = localStorage.getItem('jira_user_email') || '';
-            } else {
-                document.getElementById('authToken').value = '';
-                document.getElementById('authToken').disabled = false;
-            }
-        }
 
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('authError').style.display = 'none';
-        }
-
-        // Confluence Summary Functions
-        let confluenceSummaries = {}; // Store summaries: { url: { summary, title, type } }
-
-        function showConfluenceSummary(url, type, issueKey) {
-            const modal = document.getElementById('confluenceModal');
-            const modalTitle = document.getElementById('confluenceModalTitle');
-            const modalContent = document.getElementById('confluenceModalContent');
-            const modalLink = document.getElementById('confluenceModalLink');
-            
-            modalTitle.textContent = `📄 ${type} Summary - ${issueKey}`;
-            modalLink.href = url;
-            modal.style.display = 'block';
-            
-            // Check if we already have the summary
-            if (confluenceSummaries[url] && confluenceSummaries[url].summary) {
-                displayConfluenceSummary(confluenceSummaries[url]);
-                return;
-            }
-            
-            // Fetch summary
-            modalContent.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading">Loading summary...</div></div>';
-            
-            fetchConfluenceSummary(url, type, issueKey);
-        }
-
-        async function fetchConfluenceSummary(url, type, issueKey) {
-            try {
-                const storedToken = localStorage.getItem('jira_bearer_token');
-                if (!storedToken) {
-                    throw new Error('Please authenticate first.');
-                }
-                
-                const response = await fetch(
-                    `http://localhost:3001/api/confluence/summary?url=${encodeURIComponent(url)}`,
-                    {
-                        headers: {
-                            'X-Confluence-Token': storedToken
-                        }
-                    }
-                );
-                
-                const data = await response.json();
-                
-                if (data.success && data.summary) {
-                    confluenceSummaries[url] = {
-                        summary: data.summary,
-                        title: data.title || 'Confluence Page',
-                        type: type
-                    };
-                    displayConfluenceSummary(confluenceSummaries[url]);
-                } else {
-                    throw new Error(data.error || 'Failed to fetch summary');
-                }
-            } catch (err) {
-                console.error('Error fetching Confluence summary:', err);
-                const modalContent = document.getElementById('confluenceModalContent');
-                modalContent.innerHTML = `
-                    <div style="padding: 20px; color: #dc2626;">
-                        <p><strong>Error:</strong> ${err.message}</p>
-                        <p style="margin-top: 10px; font-size: 14px; color: #666;">
-                            Make sure you have provided your Confluence PAT token. 
-                            The token should be stored in <code>confluence-key-private.txt</code> or passed via header.
-                        </p>
-                    </div>
-                `;
-            }
-        }
-
-        function displayConfluenceSummary(data) {
-            const modalContent = document.getElementById('confluenceModalContent');
-            modalContent.innerHTML = `
-                <div style="margin-bottom: 15px;">
-                    <h3 style="font-size: 18px; margin-bottom: 10px;">${data.title}</h3>
-                    <div style="background: #f8f8f8; padding: 15px; border-radius: 4px; border-left: 4px solid #3b82f6;">
-                        <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">${data.summary}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function closeConfluenceModal() {
-            document.getElementById('confluenceModal').style.display = 'none';
-        }
 
         // Display summarized field (for customfield_23073)
         async function displaySummarizedField(td, value, issueKey, fieldKey) {
@@ -2727,7 +2960,7 @@
             td.innerHTML = '<span style="color: #666; font-size: 12px;">Summarizing...</span>';
             
             try {
-                const response = await fetch('http://localhost:3001/api/summarize-text', {
+                const response = await fetch('http://localhost:7842/api/summarize-text', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2807,143 +3040,263 @@
             };
         }
 
-        // Fetch all Confluence summaries for executive view
-        async function fetchAllConfluenceSummaries(issues) {
-            const cgUrls = [];
-            const pgUrls = [];
-            
-            issues.forEach(issue => {
-                if (issue.cg) cgUrls.push(issue.cg);
-                if (issue.pg) pgUrls.push(issue.pg);
-            });
-            
-            const allUrls = [...new Set([...cgUrls, ...pgUrls])];
-            
-            if (allUrls.length === 0) {
-                return {};
+
+        // Test and authenticate Jira token
+        async function testAndAuthenticateJira(buttonElement) {
+            // Get token from user input
+            const token = prompt('Enter your Jira Bearer token (PAT):');
+            if (!token || token.trim() === '') {
+                return;
             }
             
+            const cleanToken = token.trim();
+            
+            // Show loading state
+            const button = buttonElement || event?.target;
+            const originalText = button.textContent;
+            button.textContent = '⏳ Testing...';
+            button.disabled = true;
+            
             try {
-                const storedToken = localStorage.getItem('jira_bearer_token');
-                if (!storedToken) {
-                    console.warn('No token available for Confluence summaries');
-                    return {};
-                }
-                
-                const response = await fetch('http://localhost:3001/api/confluence/summaries', {
+                const response = await fetch('http://localhost:7842/api/test-jira-token', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Confluence-Token': storedToken
+                        'X-Jira-Token': cleanToken
                     },
-                    body: JSON.stringify({ urls: allUrls })
+                    body: JSON.stringify({ token: cleanToken })
                 });
                 
                 const data = await response.json();
                 
-                if (data.success && data.summaries) {
-                    // Store summaries
-                    Object.assign(confluenceSummaries, data.summaries);
-                    return data.summaries;
-                }
-            } catch (err) {
-                console.error('Error fetching all Confluence summaries:', err);
-            }
-            
-            return {};
-        }
-
-        async function authenticateToken() {
-            const token = document.getElementById('authToken').value.trim();
-            const email = document.getElementById('authEmail').value.trim();
-            const errorDiv = document.getElementById('authError');
-            
-            if (!token || token === '••••••••••••••••') {
-                errorDiv.textContent = 'Please enter a valid token';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            errorDiv.style.display = 'none';
-            
-            try {
-                console.log('🔐 Testing token authentication...');
-                
-                // Test the token with PAT endpoint
-                const testResponse = await fetch('http://localhost:3001/api/test-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ token: token, email: email })
-                });
-                
-                const testData = await testResponse.json();
-                
-                if (testData.success) {
-                    // Store token in localStorage
-                    localStorage.setItem('jira_bearer_token', token);
-                    if (email) {
-                        localStorage.setItem('jira_user_email', email);
-                    }
+                if (data.success) {
+                    // Store token in localStorage (authenticate)
+                    localStorage.setItem('jira_bearer_token', cleanToken);
                     
-                    // Update UI
-                    document.getElementById('authButton').textContent = '✅ Authenticated';
-                    document.getElementById('authButton').style.background = '#10b981';
-                    document.getElementById('authButton').onclick = function() {
-                        if (confirm('You are already authenticated. Do you want to change your token?')) {
+                    // Update button to show authenticated state
+                    button.textContent = '✅ Jira Authenticated';
+                    button.style.background = '#10b981';
+                    button.onclick = function() {
+                        if (confirm('You are already authenticated. Do you want to test with a different token?')) {
                             localStorage.removeItem('jira_bearer_token');
-                            localStorage.removeItem('jira_user_email');
-                            showAuthModal();
+                            button.textContent = '🔐 Test Jira';
+                            button.style.background = '#3b82f6';
+                            button.onclick = () => testAndAuthenticateJira(button);
+                            testAndAuthenticateJira(button);
                         }
                     };
                     
-                    closeAuthModal();
-                    
-                    // Try to fetch data
-                    await refreshColumns();
+                    const message = `✅ Jira Token Test Successful!\n\n` +
+                        `Token is valid and authenticated.\n` +
+                        `Found ${data.tokenCount} token(s).\n` +
+                        (data.tokens && data.tokens.length > 0 ? 
+                            `Tokens:\n${data.tokens.map(t => `  - ${t.name} (created: ${t.createdAt})`).join('\n')}` : 
+                            '');
+                    alert(message);
                 } else {
-                    throw new Error(testData.error || 'Token validation failed');
+                    alert(`❌ Jira Token Test Failed!\n\n${data.error || 'Unknown error'}\n\n${data.details ? JSON.stringify(data.details, null, 2) : ''}`);
+                }
+            } catch (error) {
+                console.error('Jira token test error:', error);
+                alert(`❌ Jira Token Test Failed!\n\n${error.message || 'Network error. Please check your connection.'}`);
+            } finally {
+                if (button.textContent === '⏳ Testing...') {
+                    button.textContent = originalText;
+                }
+                button.disabled = false;
+            }
+        }
+        
+        // Test and authenticate Confluence token
+        async function testAndAuthenticateConfluence(buttonElement) {
+            // Get token from user input
+            const token = prompt('Enter your Confluence Bearer token (PAT) or use Jira token if same:');
+            if (!token || token.trim() === '') {
+                return;
+            }
+            
+            const cleanToken = token.trim();
+            
+            // Show loading state
+            const button = buttonElement || event?.target;
+            const originalText = button.textContent;
+            button.textContent = '⏳ Testing...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:7842/api/test-confluence-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Confluence-Token': cleanToken
+                    },
+                    body: JSON.stringify({ token: cleanToken })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store token in localStorage (authenticate)
+                    localStorage.setItem('confluence_bearer_token', cleanToken);
+                    
+                    // Update button to show authenticated state
+                    button.textContent = '✅ Confluence Authenticated';
+                    button.style.background = '#10b981';
+                    button.onclick = function() {
+                        if (confirm('You are already authenticated. Do you want to change your token?')) {
+                            localStorage.removeItem('confluence_bearer_token');
+                            button.textContent = '🔐 Test Confluence';
+                            button.style.background = '#8b5cf6';
+                            button.onclick = () => testAndAuthenticateConfluence(button);
+                            testAndAuthenticateConfluence(button);
+                        }
+                    };
+                    
+                    const message = `✅ Confluence Token Test Successful!\n\n` +
+                        `Token is valid and authenticated.\n` +
+                        `Authentication Method: ${data.authMethod}\n` +
+                        `Test Page: ${data.pageTitle || 'N/A'} (ID: ${data.pageId || 'N/A'})\n` +
+                        (data.labels && data.labels.length > 0 ? 
+                            `Labels: ${data.labels.join(', ')}` : 
+                            'No labels found');
+                    alert(message);
+                } else {
+                    const errorDetails = data.details ? JSON.stringify(data.details, null, 2) : '';
+                    const triedMethods = data.triedMethods ? `\n\nTried methods: ${data.triedMethods.join(', ')}` : '';
+                    alert(`❌ Confluence Token Test Failed!\n\n${data.error || 'Unknown error'}${triedMethods}\n\n${errorDetails}`);
+                }
+            } catch (error) {
+                console.error('Confluence token test error:', error);
+                alert(`❌ Confluence Token Test Failed!\n\n${error.message || 'Network error. Please check your connection.'}`);
+            } finally {
+                if (button.textContent === '⏳ Testing...') {
+                    button.textContent = originalText;
+                }
+                button.disabled = false;
+            }
+        }
+
+        // Extract Confluence page title from URL
+        function extractConfluencePageTitle(url, fieldId) {
+            if (!url || confluencePageTitles[fieldId]) return; // Already extracted
+            
+            try {
+                // Extract title from URL: /pages/123456789/Page+Title or /pages/123456789/Page-Title
+                const titleMatch = url.match(/\/pages\/\d+\/([^\/\?]+)/);
+                if (titleMatch) {
+                    let title = decodeURIComponent(titleMatch[1]);
+                    // Replace + and - with spaces, clean up
+                    title = title.replace(/\+/g, ' ').replace(/-/g, ' ').trim();
+                    if (title) {
+                        confluencePageTitles[fieldId] = title;
+                        console.log(`✅ Extracted Confluence page title for ${fieldId}: "${title}"`);
+                        // Update header if table is already rendered
+                        if (tableConfig) {
+                            createTableHeader();
+                        }
+                    }
                 }
             } catch (err) {
-                console.error('Authentication error:', err);
-                let errorMsg = err.message || 'Authentication failed';
-                
-                // Provide specific error guidance
-                if (errorMsg.includes('401') || errorMsg.includes('403') || errorMsg.includes('Invalid')) {
-                    errorMsg = 'Invalid token. Please check that you copied the complete Bearer token (PAT) from Jira.';
-                } else if (errorMsg.includes('404') || errorMsg.includes('network') || errorMsg.includes('fetch')) {
-                    errorMsg = 'Network error. Please check your connection and try again.';
-                } else if (errorMsg.includes('timeout')) {
-                    errorMsg = 'Request timed out. Please try again.';
+                console.warn(`⚠️ Error extracting Confluence title from ${url}:`, err);
+            }
+        }
+
+        // Load field names from Jira
+        async function loadFieldNames() {
+            try {
+                const storedToken = localStorage.getItem('jira_bearer_token');
+                if (!storedToken) {
+                    console.log('ℹ️ No token available, skipping field name load');
+                    return;
                 }
                 
-                errorDiv.textContent = errorMsg;
-                errorDiv.style.display = 'block';
+                const response = await fetch('http://localhost:7842/api/field-names', {
+                    headers: {
+                        'X-Jira-Token': storedToken
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.fieldMap) {
+                        Object.keys(data.fieldMap).forEach(fieldId => {
+                            fieldNameMap[fieldId] = data.fieldMap[fieldId];
+                        });
+                        console.log(`✅ Loaded ${Object.keys(fieldNameMap).length} field names`);
+                        
+                        // Log specific custom fields we care about
+                        if (fieldNameMap['customfield_23073']) {
+                            console.log(`✅ Found customfield_23073: "${fieldNameMap['customfield_23073']}"`);
+                        } else {
+                            console.warn(`⚠️ customfield_23073 not found in field map`);
+                        }
+                        if (fieldNameMap['customfield_23560']) {
+                            console.log(`✅ Found customfield_23560: "${fieldNameMap['customfield_23560']}"`);
+                        } else {
+                            console.warn(`⚠️ customfield_23560 not found in field map`);
+                        }
+                        
+                        // Recreate table header with updated field names
+                        if (tableConfig) {
+                            createTableHeader();
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ Could not load field names:', response.status);
+                    const errorText = await response.text();
+                    console.warn('⚠️ Error response:', errorText);
+                }
+            } catch (err) {
+                console.warn('⚠️ Error loading field names:', err.message);
+                // Non-critical, continue without names
             }
         }
 
         // Check authentication status on load
         function checkAuthStatus() {
-            const storedToken = localStorage.getItem('jira_bearer_token');
-            if (storedToken) {
-                document.getElementById('authButton').textContent = '✅ Authenticated';
-                document.getElementById('authButton').style.background = '#10b981';
-                document.getElementById('authButton').onclick = function() {
-                    if (confirm('You are already authenticated. Do you want to change your token?')) {
+            const jiraToken = localStorage.getItem('jira_bearer_token');
+            const confluenceToken = localStorage.getItem('confluence_bearer_token');
+            
+            // Update Jira button if authenticated
+            const jiraButton = document.querySelector('button[onclick*="testAndAuthenticateJira"]');
+            if (jiraToken && jiraButton) {
+                jiraButton.textContent = '✅ Jira Authenticated';
+                jiraButton.style.background = '#10b981';
+                jiraButton.onclick = function() {
+                    if (confirm('You are already authenticated. Do you want to test with a different token?')) {
                         localStorage.removeItem('jira_bearer_token');
-                        localStorage.removeItem('jira_user_email');
-                        showAuthModal();
+                        jiraButton.textContent = '🔐 Test Jira';
+                        jiraButton.style.background = '#3b82f6';
+                        jiraButton.onclick = () => testAndAuthenticateJira(jiraButton);
+                        testAndAuthenticateJira(jiraButton);
                     }
                 };
+            } else if (jiraButton && !jiraToken) {
+                // Not authenticated - ensure button shows "Test Jira"
+                jiraButton.textContent = '🔐 Test Jira';
+                jiraButton.style.background = '#3b82f6';
+                jiraButton.onclick = () => testAndAuthenticateJira(jiraButton);
             }
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('authModal');
-            if (event.target === modal) {
-                closeAuthModal();
+            
+            // Update Confluence button if authenticated
+            const confluenceButton = document.querySelector('button[onclick*="testAndAuthenticateConfluence"]');
+            if (confluenceToken && confluenceButton) {
+                confluenceButton.textContent = '✅ Confluence Authenticated';
+                confluenceButton.style.background = '#10b981';
+                confluenceButton.onclick = function() {
+                    if (confirm('You are already authenticated. Do you want to test with a different token?')) {
+                        localStorage.removeItem('confluence_bearer_token');
+                        confluenceButton.textContent = '🔐 Test Confluence';
+                        confluenceButton.style.background = '#8b5cf6';
+                        confluenceButton.onclick = () => testAndAuthenticateConfluence(confluenceButton);
+                        testAndAuthenticateConfluence(confluenceButton);
+                    }
+                };
+            } else if (confluenceButton && !confluenceToken) {
+                // Not authenticated - ensure button shows "Test Confluence"
+                confluenceButton.textContent = '🔐 Test Confluence';
+                confluenceButton.style.background = '#8b5cf6';
+                confluenceButton.onclick = () => testAndAuthenticateConfluence(confluenceButton);
             }
         }
 
@@ -2951,33 +3304,42 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOM loaded, initializing application...');
             
-            // Check authentication status
-            checkAuthStatus();
-            
-            // Add a small delay to ensure server is ready
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            console.log('Loading table configuration...');
-            await loadTableConfig();
-            
-            console.log('Creating table header...');
-            createTableHeader();
-            
-            // Only refresh if authenticated
-            const storedToken = localStorage.getItem('jira_bearer_token');
-            if (storedToken) {
-                console.log('Refreshing columns...');
-                await refreshColumns();
-            } else {
-                console.log('Not authenticated. Please click Authenticate button.');
+            try {
+                // Check authentication status
+                checkAuthStatus();
+                
+                // Add a small delay to ensure server is ready
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                console.log('Loading table configuration...');
+                await loadTableConfig();
+                
+                console.log('Creating table header...');
+                createTableHeader();
+                
+                // Check for stored token
+                // Don't auto-fetch data - only load configuration
+                // User must click "Fetch Data" button to load data
+                console.log('✅ Application initialized. Click "Fetch Data" to load tickets.');
+                
+                // Don't auto-fetch data - only load configuration
+                // User must click "Fetch Data" button to load data
+                console.log('✅ Application initialized. Click "Fetch Data" to load tickets.');
+            } catch (initError) {
+                console.error('❌ Error during initialization:', initError);
+                const errorDiv = document.getElementById('error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'block';
+                    const errorMsg = document.getElementById('errorMessage');
+                    if (errorMsg) {
+                        errorMsg.textContent = `Initialization error: ${initError.message || 'Unknown error'}`;
+                    }
+                }
             }
-            
-            console.log('Application initialized successfully');
         });
 
         // Auto-refresh every 5 minutes
         setInterval(refreshColumns, 5 * 60 * 1000);
     </script>
 </body>
-</html>
 </html>

@@ -530,7 +530,7 @@
         // Load table configuration
         async function loadTableConfig() {
             try {
-                const response = await fetch('http://localhost:3001/api/table-config?t=' + Date.now());
+                const response = await fetch('http://localhost:7842/api/table-config?t=' + Date.now());
                 const data = await response.json();
                 
                 if (data.success) {
@@ -554,7 +554,7 @@
                 loading.style.display = 'block';
                 error.style.display = 'none';
                 
-                const response = await fetch('http://localhost:3001/api/backend-config?t=' + Date.now());
+                const response = await fetch('http://localhost:7842/api/backend-config?t=' + Date.now());
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -610,7 +610,7 @@
                     return;
                 }
                 
-                const response = await fetch('http://localhost:3001/api/field-names', {
+                const response = await fetch('http://localhost:7842/api/field-names', {
                     headers: {
                         'X-Jira-Token': storedToken
                     }
@@ -808,7 +808,7 @@
                 }
                 
                 const response = await fetch(
-                    `http://localhost:3001/api/discover-fields?jql=${encodeURIComponent(jql)}`,
+                    `http://localhost:7842/api/discover-fields?jql=${encodeURIComponent(jql)}`,
                     {
                         headers: {
                             'X-Jira-Token': storedToken
@@ -1101,7 +1101,7 @@
         // Save configuration
         async function saveConfiguration() {
             try {
-                const response = await fetch('http://localhost:3001/api/save-column-config', {
+                const response = await fetch('http://localhost:7842/api/save-column-config', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

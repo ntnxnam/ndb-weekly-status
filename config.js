@@ -37,23 +37,19 @@ class ConfigManager {
       const configData = fs.readFileSync(configPath, 'utf8');
       const config = JSON.parse(configData);
       
-      // Load API token from private key file
-      try {
-        const keyPath = path.join(__dirname, 'jira-key-private.txt');
-        const apiToken = fs.readFileSync(keyPath, 'utf8').trim();
-        
-        if (apiToken && !apiToken.includes('YOUR_JIRA_API_TOKEN_HERE')) {
-          config.jira.apiToken = apiToken;
-        }
-      } catch (keyError) {
-        console.log('No jira-key-private.txt found, using token from config.json');
+      // Load API token from environment variable (.env file)
+      // Priority: Environment variable > config.json
+      if (process.env.JIRA_API_TOKEN) {
+        config.jira.apiToken = process.env.JIRA_API_TOKEN.trim();
+      } else if (!config.jira.apiToken || config.jira.apiToken.includes('YOUR_JIRA_API_TOKEN_HERE')) {
+        // Token not in .env and not in config.json, log warning
+        console.log('⚠️ JIRA_API_TOKEN not found in .env file. Please add it to your .env file.');
       }
       
       return {
         ...config,
         defaultColumns: this.getDefaultColumns(),
-        allPossibleFields: this.getAllPossibleFields(),
-        server: { port: 8080 }
+        allPossibleFields: this.getAllPossibleFields()
       };
     } catch (error) {
       console.log('No config.json found, using backend default');
@@ -129,7 +125,7 @@ class ConfigManager {
       },
       {
         key: 'cg',
-        label: 'CG Page',
+        label: 'CG Completion',
         type: 'confluence',
         jiraField: 'customfield_10000', // TODO: Update with actual CG custom field ID
         isDefault: true,
@@ -137,7 +133,7 @@ class ConfigManager {
       },
       {
         key: 'pg',
-        label: 'PG Page',
+        label: 'PG Completion',
         type: 'confluence',
         jiraField: 'customfield_10001', // TODO: Update with actual PG custom field ID
         isDefault: true,
