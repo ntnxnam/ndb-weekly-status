@@ -1,5 +1,5 @@
 /**
- * NDB Weekly Status - Test Suite
+ * Story Point Calculator - Test Suite
  * 
  * This test suite verifies the core functionality of the application.
  * Run with: node tests/test-suite.js
@@ -257,7 +257,7 @@ async function testEnvironmentVariables() {
 // Main test runner
 async function runTests() {
   console.log('\n' + '='.repeat(60));
-  console.log('🧪 NDB Weekly Status - Test Suite');
+  console.log('🧪 Story Point Calculator - Test Suite');
   console.log('='.repeat(60));
   console.log(`\nTest Configuration:`);
   console.log(`  Base URL: ${TEST_CONFIG.baseUrl}`);

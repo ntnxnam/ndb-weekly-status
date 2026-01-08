@@ -1,6 +1,6 @@
-# NDB Weekly Status Application
+# Story Point Calculator
 
-A web application for fetching and displaying Jira issue data for weekly status reports. The application connects to Jira and Confluence APIs to fetch issue data, extract CG/PG Readiness links, and display them in a clean, organized table format.
+A web application for calculating and displaying story points from Jira issues. The application connects to Jira and Confluence APIs to fetch issue data, calculate story points from child items, and display them in a clean, organized table format.
 
 ## Features
 
@@ -24,8 +24,8 @@ A web application for fetching and displaying Jira issue data for weekly status 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd ndb-weekly-status
+git clone https://github.com/ntnxnam/ndb-story-point-calculator.git
+cd ndb-story-point-calculator
 ```
 
 2. Install dependencies:
@@ -102,7 +102,7 @@ The test suite verifies:
 ## Project Structure
 
 ```
-ndb-weekly-status/
+ndb-story-point-calculator/
 ├── server.js                 # Express server and API endpoints
 ├── jira-client-clean.js      # Jira API client and data formatting
 ├── confluence-client.js      # Confluence API client

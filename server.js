@@ -30,25 +30,6 @@ function getPort() {
 
 const port = getPort();
 
-// Debug logging helper
-function debugLog(location, message, data, hypothesisId) {
-  try {
-    const logPath = path.join(__dirname, '.cursor', 'debug.log');
-    const logEntry = {
-      location,
-      message,
-      data,
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId
-    };
-    fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
-  } catch (err) {
-    // Silently fail if logging doesn't work
-  }
-}
-
 // Helper function to extract page title from URL (module-level for reuse)
 const extractTitleFromUrl = (url) => {
   if (!url) return null;
@@ -75,9 +56,6 @@ const extractTitleFromUrl = (url) => {
 
 // Helper function to fetch remote links for issues
 async function fetchRemoteLinksForIssues(issues, userToken) {
-  // #region agent log
-  debugLog('server.js:34', 'fetchRemoteLinksForIssues ENTRY', {issueCount: issues?.length, hasToken: !!userToken}, 'A');
-  // #endregion
   const axios = require('axios');
   const fs = require('fs');
   const path = require('path');
@@ -219,18 +197,6 @@ async function fetchRemoteLinksForIssues(issues, userToken) {
   console.log(`✅ [fetchRemoteLinksForIssues] Fetched remote links for ${fetchedCount} issues (${errorCount} errors)`);
   console.log(`✅ [fetchRemoteLinksForIssues] Found Confluence links for ${Object.keys(allConfluenceLinksMap).length} issues`);
   
-  // #region agent log
-  const sampleIssueKeys = Object.keys(remoteLinksMap).slice(0, 3);
-  debugLog('server.js:175', 'fetchRemoteLinksForIssues EXIT', {
-    mentionedInCount: Object.keys(remoteLinksMap).length,
-    allConfluenceCount: Object.keys(allConfluenceLinksMap).length,
-    sampleIssues: sampleIssueKeys.map(k => ({
-      key: k,
-      mentionedInLinks: remoteLinksMap[k]?.length || 0,
-      allConfluenceLinks: allConfluenceLinksMap[k]?.length || 0
-    }))
-  }, 'A');
-  // #endregion
   
   // Return both maps
   return {
@@ -263,24 +229,10 @@ function extractVersionForLabel(fixVersions) {
 // Enhanced to fetch page titles from Confluence API for better identification
 // Now validates status and fixVersion before returning links
 async function findReadinessLink(remoteLinks, type, confluenceClient, confluenceToken, issue = null) {
-  // #region agent log
-  debugLog('server.js:204', 'findReadinessLink ENTRY', {
-    type,
-    remoteLinksCount: remoteLinks?.length || 0,
-    issueKey: issue?.key || 'none',
-    hasConfluenceClient: !!confluenceClient,
-    hasToken: !!confluenceToken,
-    issueStatus: issue?.fields?.status?.name || issue?.status?.name || 'none',
-    fixVersions: issue?.fields?.fixVersions?.map(v => typeof v === 'string' ? v : v.name) || issue?.fixVersions?.map(v => typeof v === 'string' ? v : v.name) || []
-  }, 'B');
-  // #endregion
   if (!Array.isArray(remoteLinks) || remoteLinks.length === 0) {
     if (issue) {
       console.log(`⏭️ [findReadinessLink] ${issue.key}: No remote links found for ${type}`);
     }
-      // #region agent log
-      debugLog('server.js:209', 'findReadinessLink EXIT (no links)', {type, issueKey: issue?.key || 'none', returnValue: 'No link'}, 'B');
-      // #endregion
     return 'No link';
   }
   
@@ -291,15 +243,6 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
   const searchTerm = type === 'CG Readiness' ? 'cg readiness' : 'pg readiness';
   
   console.log(`🔍 [findReadinessLink] Looking for ${type} in ${remoteLinks.length} remote links`);
-  
-  // DEBUG: Log all URLs being checked for FEAT-18289
-  if (issue && issue.key === 'FEAT-18289') {
-    console.log(`\n🔍 [DEBUG FEAT-18289 findReadinessLink] Remote links URLs for ${type}:`);
-    remoteLinks.forEach((link, idx) => {
-      const object = link.object || {};
-      console.log(`  Link ${idx + 1}: URL="${object.url || 'N/A'}", Title="${object.title || 'N/A'}", Relationship="${link.relationship || 'N/A'}"`);
-    });
-  }
   
   // Fetch page titles from Confluence API for all links
   // Skip quick check - always fetch page titles to get accurate names
@@ -312,11 +255,6 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
       const url = object.url || '';
       const genericTitle = (object.title || '').toLowerCase();
       
-      // DEBUG: Log URL being processed for FEAT-18289
-      if (issue && issue.key === 'FEAT-18289') {
-        console.log(`\n🔍 [DEBUG FEAT-18289] Processing link ${idx + 1}/${remoteLinks.length}: ${url.substring(0, 100)}`);
-      }
-      
       // Process all links (not just generic titles) to ensure we check all Confluence pages
       // This handles cases where the remote link title might be different from the actual page title
       try {
@@ -325,11 +263,6 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
         const pageTitle = await confluenceClient.getPageTitle(url, confluenceToken);
         
         if (pageTitle) {
-          // DEBUG: Log page title for FEAT-18289
-          if (issue && issue.key === 'FEAT-18289') {
-            console.log(`📄 [DEBUG FEAT-18289] Fetched page title="${pageTitle}" from URL="${url.substring(0, 100)}"`);
-          }
-          
           const titleLower = pageTitle.toLowerCase();
           
           // Also try to fetch labels
@@ -395,16 +328,6 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
               if (response.data && response.data.metadata && response.data.metadata.labels) {
                 labels = response.data.metadata.labels.results || [];
                 console.log(`✅ [findReadinessLink] Page "${pageTitle}" has labels: ${labels.map(l => l.name).join(', ')}`);
-                
-                // DEBUG: Log labels for FEAT-18289
-                if (issue && issue.key === 'FEAT-18289') {
-                  console.log(`🏷️ [DEBUG FEAT-18289] Page "${pageTitle}" has ${labels.length} label(s): ${labels.map(l => l.name).join(', ')}`);
-                }
-              } else {
-                // DEBUG: Log if no labels for FEAT-18289
-                if (issue && issue.key === 'FEAT-18289') {
-                  console.log(`⚠️ [DEBUG FEAT-18289] Page "${pageTitle}" has NO labels`);
-                }
               }
             } else {
               console.log(`⚠️ [findReadinessLink] Could not extract pageId from URL: ${url.substring(0, 100)}`);
@@ -419,22 +342,11 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
           
           console.log(`🔍 [findReadinessLink] Checking "${pageTitle}" for ${type}: titleMatches=${titleMatches}`);
           
-          // DEBUG: Log for FEAT-18289
-          if (issue && issue.key === 'FEAT-18289') {
-            console.log(`🔍 [DEBUG FEAT-18289] Page title="${pageTitle}", searchTerm="${searchTerm}", titleMatches=${titleMatches}`);
-            if (labels.length > 0) {
-              console.log(`🏷️ [DEBUG FEAT-18289] Labels: ${labels.map(l => l.name).join(', ')}`);
-            }
-          }
-          
           if (titleMatches) {
             console.log(`✅ [findReadinessLink] Found ${type} link by page title: "${pageTitle}" - ${url}`);
             if (labels.length > 0) {
               console.log(`   Labels: ${labels.map(l => l.name).join(', ')}`);
             }
-            // #region agent log
-            debugLog('server.js:388', 'findReadinessLink EXIT (page title match)', {type, issueKey: issue?.key || 'none', url, pageTitle, labels: labels.map(l => l.name), returnValue: url}, 'B');
-            // #endregion
             return url;
           } else {
             console.log(`⏭️ [findReadinessLink] Page "${pageTitle}" doesn't match ${type} (looking for "${searchTerm}")`);
@@ -456,9 +368,6 @@ async function findReadinessLink(remoteLinks, type, confluenceClient, confluence
   }
   
   console.log(`❌ [findReadinessLink] No ${type} link found`);
-  // #region agent log
-  debugLog('server.js:454', 'findReadinessLink EXIT (no match)', {type, issueKey: issue?.key || 'none', remoteLinksCount: remoteLinks?.length || 0, returnValue: 'No link'}, 'B');
-  // #endregion
   return 'No link';
 }
 
@@ -536,20 +445,6 @@ app.get('/api/fetch-all-data', async (req, res) => {
     const enrichedIssues = await Promise.all(data.issues.map(async (issue) => {
       const remoteLinks = remoteLinksMap[issue.key] || [];
       const allConfluenceLinks = allConfluenceLinksMap[issue.key] || [];
-      
-      // DEBUG: Log URLs for FEAT-18289
-      if (issue.key === 'FEAT-18289') {
-        console.log(`\n🔍 [DEBUG FEAT-18289] Remote Links (mentioned in):`);
-        remoteLinks.forEach((link, idx) => {
-          const object = link.object || {};
-          console.log(`  Link ${idx + 1}: URL="${object.url || 'N/A'}", Title="${object.title || 'N/A'}", Relationship="${link.relationship || 'N/A'}"`);
-        });
-        
-        console.log(`\n🔍 [DEBUG FEAT-18289] All Confluence Links:`);
-        allConfluenceLinks.forEach((link, idx) => {
-          console.log(`  Confluence Link ${idx + 1}: URL="${link.url || 'N/A'}", PageId="${link.pageId || 'N/A'}", Title="${link.title || 'N/A'}", Relationship="${link.relationship || 'N/A'}"`);
-        });
-      }
       
       // Filter CG and PG Readiness links based on extracted titles from URLs
       // Titles were already extracted in fetchRemoteLinksForIssues using extractTitleFromUrl
@@ -630,18 +525,6 @@ app.get('/api/fetch-all-data', async (req, res) => {
       // Also store individual links for potential future use
       issue._allConfluenceLinks = allConfluenceLinks;
       
-      // #region agent log
-      debugLog('server.js:477', '_readinessLinks SET', {
-        issueKey: issue.key,
-        cgReadinessLink,
-        cgReadinessLinkRaw: cgReadinessLink,
-        pgReadinessLink,
-        pgReadinessLinkRaw: pgReadinessLink,
-        _readinessLinksCg: issue._readinessLinks.cg,
-        _readinessLinksPg: issue._readinessLinks.pg,
-        allConfluenceLinksCount: allConfluenceLinks.length
-      }, 'C');
-      // #endregion
       
       // Store ALL Confluence links (with URL, pageId, title, relationship)
       issue._allConfluenceLinks = allConfluenceLinks;
@@ -660,7 +543,41 @@ app.get('/api/fetch-all-data', async (req, res) => {
       return issue;
     }));
     
-    const formattedIssues = jiraClient.formatIssues(enrichedIssues, true);
+    // Calculate story points for each feature/initiative (only for FEAT/INITIATIVE types)
+    console.log(`📊 [API] Calculating story points for features/initiatives...`);
+    
+    const featuresWithStoryPoints = enrichedIssues.map(issue => {
+      // Only calculate for FEAT/INITIATIVE types
+      const issueType = (issue.fields?.issuetype?.name || issue.fields?.issuetype || '').toLowerCase();
+      const isFeatureOrInitiative = issueType.includes('feature') || issueType.includes('initiative') || issueType.includes('x-feat');
+      
+      if (!isFeatureOrInitiative) {
+        // Not a feature/initiative, skip story points calculation
+        return issue;
+      }
+      
+      try {
+        // Use already-fetched issues instead of making another API call
+        const storyPointsData = calculateStoryPointsFromFetchedIssues(issue.key, data.issues);
+        issue._storyPoints = storyPointsData;
+        console.log(`📊 [API] ${issue.key}: Story Points - Done: ${storyPointsData.done}, Pending: ${storyPointsData.pending}, Won't Fix: ${storyPointsData.wontFix}, Total: ${storyPointsData.total}`);
+      } catch (error) {
+        console.error(`❌ [API] Failed to calculate story points for ${issue.key}: ${error.message}`);
+        // Set default values on error
+        issue._storyPoints = {
+          done: 0,
+          pending: 0,
+          wontFix: 0,
+          total: 0,
+          error: error.message
+        };
+      }
+      
+      return issue;
+    });
+    
+    // Format issues with calculated story points
+    const formattedIssues = jiraClient.formatIssues(featuresWithStoryPoints, true);
     
     const duration = Date.now() - startTime;
     console.log(`✅ [API] /api/fetch-all-data - Success in ${duration}ms - ${formattedIssues.length} issues`);
@@ -928,10 +845,10 @@ app.get('/api/field-names', async (req, res) => {
     if (fieldsResponse.data && Array.isArray(fieldsResponse.data)) {
       fieldsResponse.data.forEach(field => {
         if (field.id && field.name) {
-          fieldMap[field.id] = field.name;
-          // Also map by key if different from id
-          if (field.key && field.key !== field.id) {
-            fieldMap[field.key] = field.name;
+        fieldMap[field.id] = field.name;
+        // Also map by key if different from id
+        if (field.key && field.key !== field.id) {
+          fieldMap[field.key] = field.name;
           }
         }
       });
@@ -1980,6 +1897,150 @@ function getWeekKey(date) {
   return `${d.getFullYear()}-W${week}`;
 }
 
+// Calculate story points from already-fetched issues (synchronous, no API calls)
+function calculateStoryPointsFromFetchedIssues(featureKey, allIssues) {
+  // Issues to ignore (epic-level and above)
+  const ignoreTypes = ['epic', 'initiative', 'feature', 'x-feat', 'capability'];
+  
+  // Positive resolutions (completed work)
+  const positiveResolutions = ['done', 'fixed', 'resolved', 'closed', 'completed'];
+  
+  // Negative resolutions (won't fix, duplicate, etc.)
+  const negativeResolutions = ["won't fix", 'wont fix', 'duplicate', 'cannot reproduce', 'not a bug', 'invalid'];
+  
+  let completedStoryPoints = 0;
+  let outstandingStoryPoints = 0;
+  let wontFixStoryPoints = 0;
+  let totalStoryPoints = 0;
+  
+  // Filter issues related to this feature
+  // The feature key might be like "FEAT-12345" - we need to find all issues that reference it
+  const relatedIssues = allIssues.filter(issue => {
+    if (!issue || !issue.key) return false;
+    
+    // Skip the feature itself (we only want child items)
+    if (issue.key === featureKey) {
+      return false;
+    }
+    
+    const issueKey = issue.key || '';
+    
+    // Try multiple ways to get parent/epic links - check both direct fields and nested objects
+    let parentLink = '';
+    if (issue.fields) {
+      // Try different field names for parent link
+      parentLink = issue.fields['Parent Link'] || 
+                   issue.fields.parent?.key || 
+                   issue.fields.parent || 
+                   issue.fields['parent']?.key ||
+                   '';
+    }
+    if (!parentLink && issue.parent) {
+      parentLink = issue.parent.key || issue.parent || '';
+    }
+    
+    let featId = '';
+    if (issue.fields) {
+      featId = issue.fields['FEAT ID'] || issue.fields.featId || '';
+    }
+    if (!featId && issue.featId) {
+      featId = issue.featId;
+    }
+    
+    let featNumber = '';
+    if (issue.fields) {
+      featNumber = issue.fields['FEAT Number'] || issue.fields.featNumber || '';
+    }
+    if (!featNumber && issue.featNumber) {
+      featNumber = issue.featNumber;
+    }
+    
+    let epicLink = '';
+    if (issue.fields) {
+      epicLink = issue.fields['Epic Link'] || 
+                issue.fields.epic?.key || 
+                issue.fields.epic || '';
+    }
+    if (!epicLink && issue.epic) {
+      epicLink = issue.epic.key || issue.epic || '';
+    }
+    
+    // Also check if issue key starts with the feature prefix (e.g., FEAT-12345-1, FEAT-12345-2)
+    const featurePrefix = featureKey.split('-').slice(0, -1).join('-'); // e.g., "FEAT" from "FEAT-12345"
+    const issuePrefix = issueKey.split('-').slice(0, -1).join('-');
+    const isSubtask = issuePrefix === featurePrefix && issueKey !== featureKey;
+    
+    // Check if issue is related to the feature
+    const isMatch = parentLink === featureKey ||
+           (featId && String(featId).includes(featureKey)) ||
+           featNumber === featureKey ||
+           epicLink === featureKey ||
+           isSubtask;
+    
+    return isMatch;
+  });
+  
+  relatedIssues.forEach((issue, index) => {
+    // Get issue type
+    const issueType = (issue.fields?.issuetype?.name || 
+                      issue.fields?.issuetype || 
+                      issue.issuetype?.name || 
+                      issue.issuetype || 
+                      '').toLowerCase();
+    
+    // Skip if it's an epic-level type
+    if (ignoreTypes.some(ignoreType => issueType.includes(ignoreType))) {
+      return;
+    }
+    
+    // Get story points
+    const storyPoints = parseFloat(issue.fields?.customfield_10002 || 0);
+    if (isNaN(storyPoints) || storyPoints === 0) {
+      return; // Skip issues with no story points
+    }
+    
+    totalStoryPoints += storyPoints;
+    
+    // Get resolution
+    const resolution = (issue.fields?.resolution?.name || 
+                       issue.fields?.resolution || 
+                       issue.resolution?.name || 
+                       issue.resolution || 
+                       '').toLowerCase();
+    const hasResolutionDate = !!issue.fields?.resolutiondate;
+    
+    // Check if unresolved
+    if (!resolution || resolution === 'unresolved' || !hasResolutionDate) {
+      outstandingStoryPoints += storyPoints;
+    } 
+    // Check if positive resolution
+    else if (positiveResolutions.some(pos => resolution.includes(pos))) {
+      completedStoryPoints += storyPoints;
+    }
+    // Check if negative resolution (won't fix, duplicate, etc.)
+    else if (negativeResolutions.some(neg => resolution.includes(neg))) {
+      wontFixStoryPoints += storyPoints;
+    }
+    // Default: if resolved but unknown resolution type, treat as completed
+    else {
+      completedStoryPoints += storyPoints;
+    }
+  });
+  
+  console.log(`📊 [calculateStoryPoints] ${featureKey}: Done=${completedStoryPoints}, Pending=${outstandingStoryPoints}, Won't Fix=${wontFixStoryPoints}, Total=${totalStoryPoints}`);
+  
+  return {
+    done: completedStoryPoints,
+    pending: outstandingStoryPoints,
+    wontFix: wontFixStoryPoints,
+    total: totalStoryPoints,
+    childItemsCount: relatedIssues.filter(issue => {
+      const issueType = (issue.fields?.issuetype?.name || issue.fields?.issuetype || '').toLowerCase();
+      return !ignoreTypes.some(ignoreType => issueType.includes(ignoreType));
+    }).length
+  };
+}
+
 // Find kick off epic and fetch all tasks with due dates
 async function findKickOffEpicTasks(featureKey, issues, userToken) {
   try {
@@ -2083,6 +2144,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`🚀 NDB Weekly Status app running at http://localhost:${port}`);
+  console.log(`🚀 Story Point Calculator app running at http://localhost:${port}`);
   console.log(`📊 Jira integration ready`);
 });

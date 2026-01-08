@@ -1,4 +1,4 @@
-# Implementation Prompt for NDB Weekly Status Application
+# Implementation Prompt for Story Point Calculator Application
 
 ## Context
 You are building a Jira weekly status reporting web application. The application connects to Jira and Confluence APIs to fetch and display issue data in a clean, organized table format.

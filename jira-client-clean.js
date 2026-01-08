@@ -565,26 +565,6 @@ class JiraClient {
         if (column && column.jiraField && column.key) {
           const fieldValue = this.getFieldValue(issue, column.jiraField);
           
-          // Debug logging for custom fields and resolution (only log first issue to avoid spam)
-          if (index === 0 && column.jiraField && (column.jiraField.startsWith('customfield_') || column.key === 'resolution' || column.key === 'customfield_23073' || column.key === 'customfield_23560')) {
-            try {
-              const formattedValue = column.jiraField === 'customfield_23073' || column.key === 'customfield_23073' 
-                ? fieldValue 
-                : (column.jiraField === 'customfield_23560' || column.key === 'customfield_23560'
-                  ? (fieldValue && typeof fieldValue === 'object' ? (fieldValue.value || fieldValue.name || JSON.stringify(fieldValue)) : fieldValue)
-                  : this.formatFieldValue(fieldValue, column.type));
-              
-              console.log(`🔍 [formatIssues] Processing ${column.key} (${column.jiraField}):`, {
-                hasValue: fieldValue !== null && fieldValue !== undefined,
-                valueType: typeof fieldValue,
-                rawValue: typeof fieldValue === 'string' ? fieldValue.substring(0, 50) : (typeof fieldValue === 'object' && fieldValue !== null ? JSON.stringify(fieldValue).substring(0, 100) : fieldValue),
-                formattedValue: formattedValue
-              });
-            } catch (logError) {
-              // Ignore logging errors
-            }
-          }
-          
           // Special handling for customfield_23073 - store raw value for summarization
           if (column.jiraField === 'customfield_23073' || column.key === 'customfield_23073') {
             // Store the raw value - will be summarized on the frontend
@@ -783,12 +763,22 @@ class JiraClient {
             }
           }
           // Special handling for story points
+          // If _storyPoints is available (calculated from child items), use that
+          // Otherwise, use the issue's own story points
           else if (column.key === 'customfield_10002' || column.jiraField === 'customfield_10002') {
-            const storyPoints = issue.fields?.customfield_10002;
-            if (storyPoints !== null && storyPoints !== undefined) {
-              formattedIssue[column.key] = parseFloat(storyPoints) || 0;
+            if (issue._storyPoints && issue._storyPoints.total !== undefined) {
+              // Use calculated story points from child items
+              formattedIssue[column.key] = issue._storyPoints;
+              formattedIssue._storyPointsCalculated = true;
             } else {
-              formattedIssue[column.key] = 0;
+              // Fallback to issue's own story points
+              const storyPoints = issue.fields?.customfield_10002;
+              if (storyPoints !== null && storyPoints !== undefined) {
+                formattedIssue[column.key] = parseFloat(storyPoints) || 0;
+              } else {
+                formattedIssue[column.key] = 0;
+              }
+              formattedIssue._storyPointsCalculated = false;
             }
           }
           // Special handling for due date

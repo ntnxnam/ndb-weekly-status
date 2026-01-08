@@ -1,5 +1,5 @@
 {
-  "name": "ndb-weekly-status",
+  "name": "story-point-calculator",
   "version": "1.0.0",
   "description": "A simple webapp to fetch and display Jira data",
   "main": "server.js",

@@ -1,4 +1,4 @@
-# NDB Weekly Status - Complete Requirements
+# Story Point Calculator - Complete Requirements
 
 ## Core Functionality
 

@@ -1,4 +1,4 @@
-# NDB Weekly Status - Test Plan
+# Story Point Calculator - Test Plan
 
 ## Test Environment Setup
 - Server running on port 7842 (or configured port)

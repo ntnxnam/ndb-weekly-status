@@ -16,7 +16,7 @@ function question(prompt) {
 }
 
 async function setupConfig() {
-  console.log('🚀 NDB Weekly Status - Configuration Setup\n');
+  console.log('🚀 Story Point Calculator - Configuration Setup\n');
   console.log('This will help you configure your Jira connection.\n');
 
   try {
@@ -66,7 +66,7 @@ async function setupConfig() {
     console.log('\n✅ Configuration saved to config.json (this file is ignored by Git for security)');
 
     // Create .env file
-    const envContent = `# NDB Weekly Status Configuration
+    const envContent = `# Story Point Calculator Configuration
 JIRA_BASE_URL=${config.jira.baseUrl}
 JIRA_USERNAME=${config.jira.username}
 JIRA_API_TOKEN=${config.jira.apiToken}
